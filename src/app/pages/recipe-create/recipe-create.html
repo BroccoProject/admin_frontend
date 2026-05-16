@@ -1,0 +1,404 @@
+<div class="page-container">
+  <!-- Top Header Bar -->
+  <div class="create-header">
+    <button class="btn-back" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Back to Recipes
+    </button>
+    <h2>Add New Recipe via AI Parser</h2>
+    @if (draft()) {
+      <button class="btn-reset-header" (click)="resetParser()">Start Over</button>
+    }
+  </div>
+
+  <!-- Split Screen Container -->
+  <div class="split-container">
+    
+    <!-- LEFT PANEL: AI Parsing & Feedback -->
+    <div class="panel left-panel">
+      <div class="panel-header">
+        <span class="step-badge">AI Assistant</span>
+        <h3>{{ threadId() ? 'Refine with Feedback' : 'Paste Raw Recipe Text' }}</h3>
+        <p class="panel-subtitle">
+          {{ threadId() ? 'Tell the AI what to fix, add, or translate, and it will rewrite the draft.' : 'Copy-paste any raw recipe from a website, email, or book. The AI will extract all details.' }}
+        </p>
+      </div>
+
+      <div class="panel-body">
+        @if (!threadId()) {
+          <!-- Raw Text Input (Initial State) -->
+          <div class="input-group full-height">
+            <textarea
+              class="raw-textarea"
+              placeholder="Paste raw recipe text here... For example:
+- Title: Chocolate Cake
+- 2 cups of sugar, 3 eggs...
+- Steps: Mix everything and bake for 30 minutes at 180C."
+              [ngModel]="rawText()"
+              (ngModelChange)="rawText.set($event)"
+              [disabled]="isProcessing()"
+            ></textarea>
+          </div>
+        } @else {
+          <!-- Feedback Mode -->
+          <div class="feedback-container">
+            <div class="ai-status-card">
+              <div class="status-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div class="status-info">
+                <h4>AI Draft Generated!</h4>
+                <p>Verify the structured form on the right. You can either make manual edits or tell the AI to correct it below.</p>
+              </div>
+            </div>
+
+            <div class="tips-box">
+              <h5>💡 Tips for corrections:</h5>
+              <ul>
+                <li>"Step 2 is missing the chocolate ingredient"</li>
+                <li>"Translate instruction translations into Spanish"</li>
+                <li>"Change prep time to 45 minutes"</li>
+              </ul>
+            </div>
+
+            <div class="input-group">
+              <label>AI Instructions / Corrections</label>
+              <textarea
+                class="feedback-textarea"
+                placeholder="Describe your adjustments here..."
+                [ngModel]="feedbackText()"
+                (ngModelChange)="feedbackText.set($event)"
+                [disabled]="isProcessing()"
+              ></textarea>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="panel-footer">
+        @if (threadId()) {
+          <button class="btn-secondary" (click)="resetParser()" [disabled]="isProcessing()">
+            Start Over
+          </button>
+        }
+        <button
+          class="btn-primary btn-ai"
+          [disabled]="isProcessing() || (!threadId() ? !rawText().trim() : !feedbackText().trim())"
+          (click)="processWithAi()"
+        >
+          @if (isProcessing()) {
+            <span class="spinner-small"></span> Processing...
+          } @else {
+            <svg class="sparkles-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            {{ threadId() ? 'Process Corrections' : 'Process with AI' }}
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Parsed Draft Form / Preview -->
+    <div class="panel right-panel">
+      @if (!draft()) {
+        <!-- EMPTY STATE: Placeholder -->
+        <div class="empty-state-container">
+          <div class="empty-state-card">
+            <div class="placeholder-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <h3>Structured Recipe Draft</h3>
+            <p>Paste raw text and process it on the left to display the editable form here.</p>
+          </div>
+        </div>
+      } @else {
+        <!-- ACTIVE STATE: Interactive Tabbed Form -->
+        <div class="panel-header tabbed-header">
+          <div class="tabs-bar">
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'general'"
+              (click)="activeTab.set('general')"
+            >
+              General Info
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'ingredients'"
+              (click)="activeTab.set('ingredients')"
+            >
+              Ingredients ({{ draft()?.ingredients?.length || 0 }})
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'steps'"
+              (click)="activeTab.set('steps')"
+            >
+              Steps ({{ draft()?.steps?.length || 0 }})
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-body scrollable-body">
+          <div class="form-container">
+            
+            <!-- TAB 1: General Info -->
+            @if (activeTab() === 'general') {
+              <div class="form-tab-content">
+                <div class="form-group">
+                  <label>Recipe Title <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    [ngModel]="draft()!.title"
+                    (ngModelChange)="updateField('title', $event)"
+                    placeholder="Enter recipe title"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group half">
+                    <label>Category</label>
+                    <input
+                      type="text"
+                      [ngModel]="draft()!.category"
+                      (ngModelChange)="updateField('category', $event)"
+                      placeholder="e.g. Dessert"
+                    />
+                  </div>
+                  <div class="form-group half">
+                    <label>Area / Cuisine</label>
+                    <input
+                      type="text"
+                      [ngModel]="draft()!.area"
+                      (ngModelChange)="updateField('area', $event)"
+                      placeholder="e.g. Italian"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group half">
+                    <label>Duration (Minutes)</label>
+                    <input
+                      type="number"
+                      [ngModel]="draft()!.duration_minutes"
+                      (ngModelChange)="updateField('duration_minutes', $event)"
+                      placeholder="e.g. 45"
+                    />
+                  </div>
+                  <div class="form-group half">
+                    <label>Difficulty</label>
+                    <select
+                      [ngModel]="draft()!.difficulty_level"
+                      (ngModelChange)="updateField('difficulty_level', $event)"
+                    >
+                      <option [value]="null">Select Difficulty</option>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea
+                    rows="3"
+                    [ngModel]="draft()!.description"
+                    (ngModelChange)="updateField('description', $event)"
+                    placeholder="Brief description of the recipe..."
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>Image URL</label>
+                  <input
+                    type="text"
+                    [ngModel]="draft()!.image_url"
+                    (ngModelChange)="updateField('image_url', $event)"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group half">
+                    <label>YouTube Video URL</label>
+                    <input
+                      type="text"
+                      [ngModel]="draft()!.youtube_url"
+                      (ngModelChange)="updateField('youtube_url', $event)"
+                      placeholder="https://youtube.com/watch?v=..."
+                    />
+                  </div>
+                  <div class="form-group half">
+                    <label>Source / Original URL</label>
+                    <input
+                      type="text"
+                      [ngModel]="draft()!.source_url"
+                      (ngModelChange)="updateField('source_url', $event)"
+                      placeholder="https://recipeblog.com/recipe"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- TAB 2: Ingredients -->
+            @if (activeTab() === 'ingredients') {
+              <div class="form-tab-content">
+                <div class="section-header">
+                  <h4>Base Recipe Ingredients</h4>
+                  <p>All main ingredients extracted for the recipe list view.</p>
+                </div>
+
+                <div class="ingredients-list">
+                  @for (ing of draft()!.ingredients; track $index) {
+                    <div class="ingredient-row-card">
+                      <div class="ing-col ing-name">
+                        <input
+                          type="text"
+                          [(ngModel)]="ing.name"
+                          placeholder="Ingredient name"
+                        />
+                      </div>
+                      <div class="ing-col ing-amount">
+                        <input
+                          type="number"
+                          [(ngModel)]="ing.amount"
+                          placeholder="Amount"
+                        />
+                      </div>
+                      <div class="ing-col ing-unit">
+                        <input
+                          type="text"
+                          [(ngModel)]="ing.unit"
+                          placeholder="Unit"
+                        />
+                      </div>
+                      <button class="btn-row-delete" (click)="removeIngredient($index)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  } @empty {
+                    <div class="empty-list-placeholder">No ingredients added yet.</div>
+                  }
+                </div>
+
+                <button class="btn-add-dashed" (click)="addIngredient()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                  Add Ingredient
+                </button>
+              </div>
+            }
+
+            <!-- TAB 3: Steps -->
+            @if (activeTab() === 'steps') {
+              <div class="form-tab-content">
+                <div class="section-header">
+                  <h4>Preparation Steps</h4>
+                  <p>Individual instructions parsed. Ingredients & items tagged by AI are stored under each step.</p>
+                </div>
+
+                <div class="steps-list">
+                  @for (step of draft()!.steps; track $index) {
+                    <div class="step-card">
+                      <div class="step-card-header">
+                        <span class="step-num-badge">Step {{ step.step_number }}</span>
+                        <div class="step-duration">
+                          <input
+                            type="number"
+                            [(ngModel)]="step.duration_seconds"
+                            placeholder="Duration (sec)"
+                          />
+                          <span>seconds</span>
+                        </div>
+                        <button class="btn-row-delete" (click)="removeStep($index)">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </div>
+
+                      <div class="step-card-body">
+                        <textarea
+                          rows="2"
+                          [(ngModel)]="step.instruction"
+                          placeholder="Step instruction..."
+                        ></textarea>
+
+                        <!-- Step Metadata Preview (Read-only tags for Ingredients / Items identified in this step) -->
+                        @if (step.ingredients.length > 0 || step.items.length > 0) {
+                          <div class="step-metadata-tags">
+                            @if (step.ingredients.length > 0) {
+                              <div class="meta-tag-group">
+                                <span class="group-label">Used Ingredients:</span>
+                                <div class="tags-row">
+                                  @for (i of step.ingredients; track i.name) {
+                                    <span class="meta-tag ing-tag">{{ i.name }} ({{ i.amount || '' }} {{ i.unit || '' }})</span>
+                                  }
+                                </div>
+                              </div>
+                            }
+                            @if (step.items.length > 0) {
+                              <div class="meta-tag-group">
+                                <span class="group-label">Used Utensils/Items:</span>
+                                <div class="tags-row">
+                                  @for (it of step.items; track it.name) {
+                                    <span class="meta-tag item-tag">{{ it.name }} [{{ it.tag }}]</span>
+                                  }
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-list-placeholder">No steps added yet.</div>
+                  }
+                </div>
+
+                <button class="btn-add-dashed" (click)="addStep()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                  Add Preparation Step
+                </button>
+              </div>
+            }
+
+          </div>
+        </div>
+
+        <div class="panel-footer right-panel-footer">
+          <div class="draft-info">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>You can manually tweak details in tabs before saving.</span>
+          </div>
+          <button
+            class="btn-success"
+            [disabled]="isSubmitting() || !draft()?.title"
+            (click)="submitRecipe()"
+          >
+            @if (isSubmitting()) {
+              <span class="spinner-small"></span> Saving...
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Recipe
+            }
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Notification -->
+@if (showToast()) {
+  <div class="toast" [class.toast-success]="toastType() === 'success'" [class.toast-error]="toastType() === 'error'" id="toast-notification">
+    <div class="toast-icon">
+      @if (toastType() === 'success') {
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      }
+    </div>
+    <span class="toast-message">{{ toastMessage() }}</span>
+    <button class="toast-close" (click)="showToast.set(false)">×</button>
+  </div>
+}

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { RecipeService } from '../../services/recipe.service';
 import { Recipe, RecipeDeletePreview } from '../../models/recipe.model';
 
@@ -12,6 +13,7 @@ import { Recipe, RecipeDeletePreview } from '../../models/recipe.model';
 })
 export class RecipesPage implements OnInit {
   private readonly recipeService = inject(RecipeService);
+  private readonly router = inject(Router);
 
   recipes = signal<Recipe[]>([]);
   total = signal(0);
@@ -66,6 +68,10 @@ export class RecipesPage implements OnInit {
 
   ngOnInit(): void {
     this.loadRecipes();
+  }
+
+  onCreateRecipe(): void {
+    this.router.navigate(['/recipes/create']);
   }
 
   loadRecipes(): void {

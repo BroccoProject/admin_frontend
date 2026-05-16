@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Recipe, RecipeListResponse, RecipeDeletePreview } from '../models/recipe.model';
+import { RecipeDraft } from '../models/parser.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -35,5 +36,9 @@ export class RecipeService {
 
   deleteRecipe(id: string): Observable<{ detail: string }> {
     return this.http.delete<{ detail: string }>(`${this.baseUrl}/${id}`);
+  }
+
+  createRecipe(draft: RecipeDraft): Observable<{ id: string; status: string }> {
+    return this.http.post<{ id: string; status: string }>(this.baseUrl, draft);
   }
 }
