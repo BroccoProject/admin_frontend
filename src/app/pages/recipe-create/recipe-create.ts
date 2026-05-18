@@ -28,10 +28,54 @@ export class RecipeCreatePage {
   isSubmitting = signal(false);
   activeTab = signal<'general' | 'ingredients' | 'steps'>('general');
 
+  // Predefined ENUMs
+  readonly categories = [
+    'Beef', 'Breakfast', 'Chicken', 'Dessert', 'Goat', 'Lamb',
+    'Miscellaneous', 'Pasta', 'Pork', 'Seafood', 'Side', 'Starter',
+    'Vegan', 'Vegetarian'
+  ];
+
+  readonly difficulties = [
+    { value: 'Beginner', label: 'Beginner' },
+    { value: 'Intermediate', label: 'Intermediate' },
+    { value: 'Master Chef', label: 'Master Chef' }
+  ];
+
+  readonly availableTags = [
+    'Alcoholic', 'Baking', 'BBQ', 'Beans', 'Breakfast', 'Brunch',
+    'Bun', 'Cake', 'Calorific', 'Caramel', 'Casserole', 'Celebration',
+    'Cheap', 'Cheasy', 'Cheesy', 'Chilli', 'Chocolate', 'Christmas',
+    'Curry', 'Dairy', 'DateNight', 'Desert', 'DinnerParty', 'Easter',
+    'Egg', 'Eid', 'Expensive', 'Fish', 'Fresh', 'Fruity', 'Fusion',
+    'Glazed', 'Greasy', 'Halloween', 'HangoverFood', 'Heavy', 'HighFat',
+    'Kebab', 'Keto', 'Light', 'LowCalorie', 'LowCarbs', 'MainMeal',
+    'Meat', 'Mild', 'Nutty', 'Onthego', 'Paella', 'Paleo', 'Pancake',
+    'Party', 'Pasta', 'Pie', 'Pudding', 'Pulse', 'Salad', 'Sandwich',
+    'Sausages', 'Savory', 'Seafood', 'Shellfish', 'SideDish', 'Snack',
+    'Soup', 'Sour', 'Speciality', 'Spicy', 'Stew', 'Streetfood',
+    'StrongFlavor', 'Summer', 'Sweet', 'Tart', 'Treat', 'UnHealthy',
+    'Vegan', 'Vegetables', 'Vegetarian'
+  ];
+
   // Toast
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error'>('success');
+
+  toggleTag(tag: string): void {
+    const current = this.draft();
+    if (current) {
+      const tags = current.tags || [];
+      const updatedTags = tags.includes(tag)
+        ? tags.filter(t => t !== tag)
+        : [...tags, tag];
+      this.updateField('tags', updatedTags);
+    }
+  }
+
+  hasTag(tag: string): boolean {
+    return this.draft()?.tags?.includes(tag) || false;
+  }
 
   processWithAi(): void {
     const textToProcess = this.threadId() ? this.feedbackText() : this.rawText();
@@ -109,7 +153,7 @@ export class RecipeCreatePage {
       const updated = { ...current };
       updated.ingredients = [
         ...updated.ingredients,
-        { name: '', amount: null, unit: '', sort_order: updated.ingredients.length + 1 }
+        { name: '', amount: 1, unit: 'pcs', sort_order: updated.ingredients.length + 1 }
       ];
       this.draft.set(updated);
     }

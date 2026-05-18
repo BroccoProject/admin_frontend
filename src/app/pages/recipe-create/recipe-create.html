@@ -6,9 +6,6 @@
       Back to Recipes
     </button>
     <h2>Add New Recipe via AI Parser</h2>
-    @if (draft()) {
-      <button class="btn-reset-header" (click)="resetParser()">Start Over</button>
-    }
   </div>
 
   <!-- Split Screen Container -->
@@ -156,12 +153,15 @@
                 <div class="form-row">
                   <div class="form-group half">
                     <label>Category</label>
-                    <input
-                      type="text"
+                    <select
                       [ngModel]="draft()!.category"
                       (ngModelChange)="updateField('category', $event)"
-                      placeholder="e.g. Dessert"
-                    />
+                    >
+                      <option [value]="null">Select Category</option>
+                      @for (cat of categories; track cat) {
+                        <option [value]="cat">{{ cat }}</option>
+                      }
+                    </select>
                   </div>
                   <div class="form-group half">
                     <label>Area / Cuisine</label>
@@ -187,13 +187,13 @@
                   <div class="form-group half">
                     <label>Difficulty</label>
                     <select
-                      [ngModel]="draft()!.difficulty_level"
-                      (ngModelChange)="updateField('difficulty_level', $event)"
+                      [ngModel]="draft()!.difficulty"
+                      (ngModelChange)="updateField('difficulty', $event)"
                     >
                       <option [value]="null">Select Difficulty</option>
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
+                      @for (diff of difficulties; track diff.value) {
+                        <option [value]="diff.value">{{ diff.label }}</option>
+                      }
                     </select>
                   </div>
                 </div>
@@ -209,6 +209,35 @@
                 </div>
 
                 <div class="form-group">
+                  <label>Tags</label>
+                  <div class="tags-selector-container">
+                    <div class="selected-tags-chips">
+                      @for (tag of draft()!.tags; track tag) {
+                        <span class="selected-tag-chip">
+                          {{ tag }}
+                          <button class="remove-tag-btn" (click)="toggleTag(tag)">×</button>
+                        </span>
+                      } @empty {
+                        <span class="no-tags-placeholder">No tags selected. Click below to add.</span>
+                      }
+                    </div>
+                    
+                    <div class="available-tags-list">
+                      @for (tag of availableTags; track tag) {
+                        <button
+                          type="button"
+                          class="available-tag-btn"
+                          [class.selected]="hasTag(tag)"
+                          (click)="toggleTag(tag)"
+                        >
+                          {{ tag }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
                   <label>Image URL</label>
                   <input
                     type="text"
@@ -216,27 +245,11 @@
                     (ngModelChange)="updateField('image_url', $event)"
                     placeholder="https://example.com/image.jpg"
                   />
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group half">
-                    <label>YouTube Video URL</label>
-                    <input
-                      type="text"
-                      [ngModel]="draft()!.youtube_url"
-                      (ngModelChange)="updateField('youtube_url', $event)"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-                  </div>
-                  <div class="form-group half">
-                    <label>Source / Original URL</label>
-                    <input
-                      type="text"
-                      [ngModel]="draft()!.source_url"
-                      (ngModelChange)="updateField('source_url', $event)"
-                      placeholder="https://recipeblog.com/recipe"
-                    />
-                  </div>
+                  @if (draft()!.image_url) {
+                    <div class="image-preview-container">
+                      <img [src]="draft()!.image_url" alt="Recipe Image Preview" class="image-preview" />
+                    </div>
+                  }
                 </div>
               </div>
             }

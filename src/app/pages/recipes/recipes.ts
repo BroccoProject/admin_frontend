@@ -166,9 +166,9 @@ export class RecipesPage implements OnInit {
 
   difficultyClass(level: string | null): string {
     switch (level?.toLowerCase()) {
-      case 'easy': return 'badge-easy';
-      case 'medium': return 'badge-medium';
-      case 'hard': return 'badge-hard';
+      case 'beginner': return 'badge-easy';
+      case 'intermediate': return 'badge-medium';
+      case 'master chef': return 'badge-hard';
       default: return 'badge-neutral';
     }
   }

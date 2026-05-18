@@ -1,14 +1,14 @@
 export interface RecipeIngredientDraft {
   name: string;
-  amount: number | null;
-  unit: string | null;
+  amount: number;
+  unit: string;
   sort_order: number;
 }
 
 export interface StepIngredientDraft {
   name: string;
-  amount: number | null;
-  unit: string | null;
+  amount: number;
+  unit: string;
   actions: string[];
   name_i18n: Record<string, string>;
 }
@@ -30,10 +30,10 @@ export interface RecipeStepDraft {
 
 export interface RecipeDraft {
   title: string;
-  description: string | null;
-  difficulty_level: string | null;
-  duration_minutes: number | null;
-  category: string | null;
+  description: string;
+  difficulty: string;
+  duration_minutes: number;
+  category: string;
   area: string | null;
   tags: string[];
   source_url: string | null;
