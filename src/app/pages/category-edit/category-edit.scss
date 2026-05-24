@@ -1,89 +1,59 @@
-:host {
-  display: block;
-  padding: 32px 40px;
-}
+:host { display: block; padding: 32px 40px; animation: pageIn var(--t-med) var(--ease-out) both; }
 
 .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 20px;
-  transition: color 0.15s ease;
-  cursor: pointer;
-  &:hover { color: var(--primary); }
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--c-txt-3); margin-bottom: 18px;
+  transition: color var(--t-fast); cursor: pointer;
+  &:hover { color: var(--c-primary); }
 }
 
-h1 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--primary);
-  letter-spacing: -0.4px;
-  margin-bottom: 24px;
-}
+h1 { font-size: 22px; font-weight: 800; color: var(--c-primary); letter-spacing: -.4px; margin-bottom: 24px; }
 
+/* ── Form card ── */
 .form-card {
-  max-width: 560px;
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  border: 1.5px solid var(--border-light);
+  background: var(--c-bg-card);
+  border: 1.5px solid var(--c-border-2);
+  border-radius: var(--r-xl);
   padding: 32px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--sh-sm);
+  max-width: 800px;
 }
+
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 20px;
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px;
+  &:last-child { margin-bottom: 0; }
 
-  label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--c-txt-3); }
 
   input, textarea, select {
-    padding: 11px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    color: var(--text-primary);
-    background: var(--bg);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    outline: none;
-    width: 100%;
-
-    &::placeholder { color: var(--text-muted); }
-    &:focus {
-      border-color: var(--orange);
-      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.12);
-      background: var(--bg-card);
-    }
+    padding: 10px 14px; border: 1.5px solid var(--c-border);
+    border-radius: var(--r-md); background: var(--c-bg); color: var(--c-txt);
+    font-size: 14px; transition: border-color var(--t-fast), box-shadow var(--t-fast);
+    outline: none; width: 100%;
+    &::placeholder { color: var(--c-txt-3); }
+    &:focus { border-color: var(--c-orange); box-shadow: 0 0 0 3px rgba(243,156,18,.12); background: var(--c-bg-card); }
   }
-  textarea { resize: vertical; min-height: 100px; }
+  textarea { resize: vertical; min-height: 96px; line-height: 1.55; }
+  select { cursor: pointer; }
 }
+
+.form-divider { height: 1px; background: var(--c-border-2); margin: 4px 0 20px; }
+
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--c-txt-3); margin-bottom: 16px; }
 
 .form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 24px;
-  border-top: 1.5px solid var(--border-light);
-  margin-top: 8px;
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding-top: 24px; border-top: 1.5px solid var(--c-border-2); margin-top: 4px;
 }
 
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 60px;
-  color: var(--text-muted);
-  p { font-size: 14px; font-weight: 500; }
+.loading-state { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 60px; color: var(--c-txt-3); p { font-size: 14px; font-weight: 500; } }
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  :host { padding: 20px 16px; }
+  .form-card { padding: 20px; }
+  .form-grid-2 { grid-template-columns: 1fr; gap: 0; }
 }

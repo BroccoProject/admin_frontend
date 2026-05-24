@@ -1,0 +1,50 @@
+:host { display: flex; }
+
+.forbidden-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--c-bg);
+}
+
+.forbidden-card {
+  max-width: 400px;
+  text-align: center;
+  animation: pageIn var(--t-med) var(--ease-out) both;
+
+  .err-code {
+    font-size: 80px;
+    font-weight: 900;
+    letter-spacing: -4px;
+    color: var(--c-primary);
+    opacity: .08;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .err-divider {
+    width: 36px;
+    height: 3px;
+    background: var(--c-orange);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--c-primary);
+    letter-spacing: -.4px;
+    margin-bottom: 10px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--c-txt-3);
+    line-height: 1.65;
+    margin-bottom: 28px;
+  }
+}

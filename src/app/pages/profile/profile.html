@@ -1,42 +1,48 @@
-<div class="profile-wrapper">
-  <h1>My Profile</h1>
-
+<div class="profile-root page-enter">
   @if (user(); as u) {
-    <div class="profile-card">
-      <div class="profile-avatar">
-        {{ u.email.charAt(0).toUpperCase() }}
+    <!-- Header bar -->
+    <div class="profile-header">
+      <div class="profile-avatar">{{ u.email.charAt(0).toUpperCase() }}</div>
+      <div class="profile-identity">
+        <span class="profile-email">{{ u.email }}</span>
+        <span class="role-badge" [attr.data-role]="u.role">{{ getRoleLabel(u.role) }}</span>
       </div>
+    </div>
 
-      <div class="profile-email">{{ u.email }}</div>
-
-      <span class="role-badge" [ngClass]="'role-' + u.role">
-        {{ getRoleLabel(u.role) }}
-      </span>
-
-      <div class="profile-divider"></div>
-
-      <div class="profile-meta">
-        <div class="meta-row">
-          <span class="meta-label">Email</span>
-          <span class="meta-value">{{ u.email }}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Role</span>
-          <span class="meta-value">{{ getRoleLabel(u.role) }}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Access Level</span>
-          <span class="meta-value">
-            @if (u.role === 'admin') { Full access }
-            @else if (u.role === 'editor') { Read & Write }
-            @else { Read only }
-          </span>
+    <!-- Info grid -->
+    <div class="profile-grid">
+      <div class="info-card">
+        <span class="info-label">Email address</span>
+        <span class="info-value">{{ u.email }}</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">Role</span>
+        <span class="info-value">{{ getRoleLabel(u.role) }}</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">Access level</span>
+        <span class="info-value">
+          @if (u.role === 'admin') { Full access — create, edit, delete, manage users }
+          @else if (u.role === 'editor') { Read &amp; write — create and edit content }
+          @else { Read only — view content only }
+        </span>
+      </div>
+      <div class="info-card info-card--permissions">
+        <span class="info-label">Permissions</span>
+        <div class="perm-list">
+          <span class="perm-tag perm-on">View content</span>
+          <span class="perm-tag" [class.perm-on]="u.role === 'editor' || u.role === 'admin'">Edit content</span>
+          <span class="perm-tag" [class.perm-on]="u.role === 'admin'">Delete content</span>
+          <span class="perm-tag" [class.perm-on]="u.role === 'admin'">Manage users</span>
         </div>
       </div>
+    </div>
 
-      <button class="btn-danger" style="width:100%; justify-content:center;" (click)="logout()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign Out
+    <!-- Actions -->
+    <div class="profile-actions">
+      <button class="btn-danger btn-signout" (click)="logout()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
       </button>
     </div>
   }
