@@ -1,0 +1,78 @@
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading recipe…</p>
+  </div>
+} @else {
+  <a routerLink="/recipes" class="back-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Recipes
+  </a>
+
+  <h1>Edit Recipe</h1>
+
+  <div class="edit-page">
+    <div class="form-card">
+      <form (ngSubmit)="save()" #form="ngForm">
+
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input type="text" id="title" name="title" [ngModel]="formData().title" (ngModelChange)="formData().title = $event" placeholder="Recipe title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" [ngModel]="formData().description" (ngModelChange)="formData().description = $event" placeholder="Short description…"></textarea>
+        </div>
+
+        <div class="form-divider"></div>
+        <div class="section-title">Details</div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="difficulty_level">Difficulty</label>
+            <select id="difficulty_level" name="difficulty_level" [ngModel]="formData().difficulty_level" (ngModelChange)="formData().difficulty_level = $event">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Master Chef">Master Chef</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="duration_minutes">Duration (min)</label>
+            <input type="number" id="duration_minutes" name="duration_minutes" [ngModel]="formData().duration_minutes" (ngModelChange)="formData().duration_minutes = $event" placeholder="e.g. 30">
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+        <div class="section-title">Links & Tags</div>
+
+        <div class="form-group">
+          <label for="youtube_url">YouTube URL</label>
+          <input type="url" id="youtube_url" name="youtube_url" [ngModel]="formData().youtube_url" (ngModelChange)="formData().youtube_url = $event" placeholder="https://youtube.com/...">
+        </div>
+
+        <div class="form-group">
+          <label for="source_url">Source URL</label>
+          <input type="url" id="source_url" name="source_url" [ngModel]="formData().source_url" (ngModelChange)="formData().source_url = $event" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags (comma-separated)</label>
+          <input type="text" id="tags" name="tags" [ngModel]="tagsString()" (ngModelChange)="tagsString.set($event)" placeholder="e.g. vegan, dessert, quick">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="form.invalid || saving()">
+            @if (saving()) {
+              <span class="spinner-small"></span> Saving…
+            } @else {
+              Save Changes
+            }
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

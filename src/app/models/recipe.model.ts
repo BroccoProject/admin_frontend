@@ -1,6 +1,7 @@
 export interface Recipe {
   id: string;
   title: string;
+  description?: string | null;
   image_url: string | null;
   difficulty_level: string | null;
   duration_minutes: number | null;
@@ -8,6 +9,8 @@ export interface Recipe {
   area: string | null;
   tags: string[] | null;
   roadmap_category_titles: string[];
+  youtube_url?: string | null;
+  source_url?: string | null;
 }
 
 export interface RecipeListResponse {

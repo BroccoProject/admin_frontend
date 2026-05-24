@@ -3,15 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryService } from '../../services/category.service';
 import { Category, CategoryDeletePreview } from '../../models/category.model';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { DeleteModalComponent } from '../../components/delete-modal/delete-modal.component';
+import { ToastService } from '../../services/toast.service';
+import { HasRoleDirective } from '../../directives/has-role.directive';
+import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.directive';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-categories',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, DeleteModalComponent, HasRoleDirective],
   templateUrl: './categories.html',
   styleUrl: './categories.scss',
 })
 export class CategoriesPage implements OnInit {
   private readonly categoryService = inject(CategoryService);
+  private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
 
   categories = signal<Category[]>([]);
   total = signal(0);
@@ -29,38 +37,6 @@ export class CategoriesPage implements OnInit {
   deleting = signal(false);
   deletePreview = signal<CategoryDeletePreview | null>(null);
   previewLoading = signal(false);
-
-  // Result toast state
-  showToast = signal(false);
-  toastMessage = signal('');
-  toastType = signal<'success' | 'error'>('success');
-
-  paginationInfo = computed(() => {
-    const t = this.total();
-    const p = this.page();
-    const ps = this.pageSize();
-    const from = t === 0 ? 0 : (p - 1) * ps + 1;
-    const to = Math.min(p * ps, t);
-    return `Showing ${from} to ${to} of ${t} categories`;
-  });
-
-  pageNumbers = computed(() => {
-    const tp = this.totalPages();
-    const current = this.page();
-    const pages: number[] = [];
-    const maxVisible = 5;
-
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(tp, start + maxVisible - 1);
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   ngOnInit(): void {
     this.loadCategories();
@@ -85,7 +61,7 @@ export class CategoriesPage implements OnInit {
         },
         error: () => {
           this.loading.set(false);
-          this.showToastMessage('Failed to load categories', 'error');
+          this.toastService.show('Failed to load categories', 'error');
         },
       });
   }
@@ -101,10 +77,8 @@ export class CategoriesPage implements OnInit {
     this.loadCategories();
   }
 
-  goToPage(p: number): void {
-    if (p < 1 || p > this.totalPages()) return;
-    this.page.set(p);
-    this.loadCategories();
+  onEditCategory(category: Category): void {
+    this.router.navigate(['/categories', category.id, 'edit']);
   }
 
   // Delete flow
@@ -143,7 +117,7 @@ export class CategoriesPage implements OnInit {
         this.showDeleteModal.set(false);
         this.categoryToDelete.set(null);
         this.deletePreview.set(null);
-        this.showToastMessage('Category deleted successfully!', 'success');
+        this.toastService.show('Category deleted successfully!', 'success');
         this.loadCategories();
       },
       error: (err) => {
@@ -154,15 +128,8 @@ export class CategoriesPage implements OnInit {
         const message =
           err?.error?.detail ||
           'An unexpected error occurred while deleting the category.';
-        this.showToastMessage(message, 'error');
+        this.toastService.show(message, 'error');
       },
     });
-  }
-
-  private showToastMessage(message: string, type: 'success' | 'error'): void {
-    this.toastMessage.set(message);
-    this.toastType.set(type);
-    this.showToast.set(true);
-    setTimeout(() => this.showToast.set(false), 4000);
   }
 }

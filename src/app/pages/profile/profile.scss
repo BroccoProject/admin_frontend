@@ -1,0 +1,86 @@
+:host {
+  display: block;
+  padding: 32px 40px;
+}
+
+/* ── Profile Card ── */
+.profile-wrapper {
+  max-width: 520px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.4px;
+  margin-bottom: 24px;
+}
+
+.profile-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border-light);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: var(--accent-light);
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 auto 20px;
+  border: 3px solid var(--accent);
+  box-shadow: 0 4px 16px rgba(161, 227, 200, 0.5);
+}
+
+.profile-email {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 5px 18px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  margin-bottom: 32px;
+}
+
+.role-admin  { background: var(--accent-light); color: var(--primary); border: 1.5px solid var(--accent); }
+.role-editor { background: var(--orange-light); color: var(--orange-dark); border: 1.5px solid #f9c97a; }
+.role-viewer { background: var(--grey-bg); color: var(--grey); border: 1.5px solid var(--border); }
+
+.profile-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 0 0 28px;
+}
+
+.profile-meta {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .meta-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .meta-value { font-size: 14px; color: var(--primary); font-weight: 600; }
+}

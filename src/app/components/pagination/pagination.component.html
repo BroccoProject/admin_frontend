@@ -1,0 +1,32 @@
+<div class="pagination-container">
+  <div class="pagination-info">
+    {{ paginationInfo() }}
+  </div>
+  <div class="pagination-controls">
+    <button
+      class="btn-page"
+      [disabled]="page() === 1"
+      (click)="goToPage(page() - 1)"
+    >
+      Previous
+    </button>
+    
+    @for (p of pageNumbers(); track p) {
+      <button
+        class="btn-page"
+        [class.active]="page() === p"
+        (click)="goToPage(p)"
+      >
+        {{ p }}
+      </button>
+    }
+    
+    <button
+      class="btn-page"
+      [disabled]="page() === totalPages()"
+      (click)="goToPage(page() + 1)"
+    >
+      Next
+    </button>
+  </div>
+</div>

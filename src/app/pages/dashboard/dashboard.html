@@ -1,0 +1,6 @@
+@if (currentUser(); as user) {
+  <div class="welcome-card">
+    <h2>Welcome back, {{ user.email }}! 👋</h2>
+    <p>You are signed in as <strong>{{ user.role }}</strong>. Use the sidebar to navigate the admin panel.</p>
+  </div>
+}

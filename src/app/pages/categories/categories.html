@@ -71,10 +71,10 @@
             }
           </td>
           <td class="cell-actions">
-            <button class="btn-icon btn-edit" title="Edit" id="btn-edit-{{ category.id }}">
+            <button class="btn-icon btn-edit" title="Edit" id="btn-edit-{{ category.id }}" *hasRole="'editor'" (click)="onEditCategory(category)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
             </button>
-            <button class="btn-icon btn-delete" title="Delete" (click)="confirmDelete(category)" id="btn-delete-{{ category.id }}">
+            <button class="btn-icon btn-delete" title="Delete" (click)="confirmDelete(category)" id="btn-delete-{{ category.id }}" *hasRole="'admin'">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
           </td>
@@ -97,91 +97,23 @@
 
 <!-- Pagination -->
 @if (totalPages() > 1) {
-  <div class="pagination-bar">
-    <span class="pagination-info">{{ paginationInfo() }}</span>
-    <div class="pagination-controls">
-      <button
-        class="page-btn"
-        [disabled]="page() === 1"
-        (click)="goToPage(page() - 1)"
-        id="btn-prev-page"
-      >‹</button>
-      @for (p of pageNumbers(); track p) {
-        <button
-          class="page-btn"
-          [class.active]="p === page()"
-          (click)="goToPage(p)"
-        >{{ p }}</button>
-      }
-      <button
-        class="page-btn"
-        [disabled]="page() === totalPages()"
-        (click)="goToPage(page() + 1)"
-        id="btn-next-page"
-      >›</button>
-    </div>
-  </div>
+  <app-pagination
+    [page]="page()"
+    [totalPages]="totalPages()"
+    [total]="total()"
+    [pageSize]="pageSize()"
+    (pageChange)="page.set($event); loadCategories()"
+  ></app-pagination>
 }
 
 <!-- Delete Confirmation Modal -->
-@if (showDeleteModal()) {
-  <div class="modal-backdrop" (click)="cancelDelete()">
-    <div class="modal modal-delete" (click)="$event.stopPropagation()" id="delete-modal">
-      <div class="modal-icon modal-icon-danger">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </div>
-      <h3>Delete Category</h3>
-      <p>You are about to permanently delete <strong>{{ categoryToDelete()?.title }}</strong>. The following data will also be deleted via cascade:</p>
+<app-delete-modal
+  [visible]="showDeleteModal()"
+  [itemName]="categoryToDelete()?.title || ''"
+  [preview]="deletePreview()"
+  [previewLoading]="previewLoading()"
+  [deleting]="deleting()"
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+></app-delete-modal>
 
-      <!-- Impact stats -->
-      <div class="impact-grid">
-        @if (previewLoading()) {
-          <div class="impact-card impact-skeleton"></div>
-          <div class="impact-card impact-skeleton"></div>
-          <div class="impact-card impact-skeleton"></div>
-        } @else if (deletePreview()) {
-          <div class="impact-card">
-            <span class="impact-value">{{ deletePreview()!.roadmap_nodes }}</span>
-            <span class="impact-label">Roadmap Nodes</span>
-          </div>
-          <div class="impact-card">
-            <span class="impact-value">{{ deletePreview()!.unlocked_by_users }}</span>
-            <span class="impact-label">Users Unlocked</span>
-          </div>
-          <div class="impact-card">
-            <span class="impact-value">{{ deletePreview()!.completed_node_records }}</span>
-            <span class="impact-label">Completions Lost</span>
-          </div>
-        }
-      </div>
-
-      <p class="modal-warning">This action <strong>cannot be undone</strong>.</p>
-
-      <div class="modal-actions">
-        <button class="btn-secondary" (click)="cancelDelete()" id="btn-cancel-delete">Cancel</button>
-        <button class="btn-danger" (click)="executeDelete()" [disabled]="deleting() || previewLoading()" id="btn-confirm-delete">
-          @if (deleting()) {
-            <span class="spinner-small"></span> Deleting...
-          } @else {
-            Delete
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Toast Notification -->
-@if (showToast()) {
-  <div class="toast" [class.toast-success]="toastType() === 'success'" [class.toast-error]="toastType() === 'error'" id="toast-notification">
-    <div class="toast-icon">
-      @if (toastType() === 'success') {
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      } @else {
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      }
-    </div>
-    <span class="toast-message">{{ toastMessage() }}</span>
-    <button class="toast-close" (click)="showToast.set(false)">×</button>
-  </div>
-}

@@ -1,0 +1,122 @@
+:host {
+  display: block;
+  padding: 32px 40px;
+}
+
+/* ── Edit Page Layout ── */
+.edit-page {
+  max-width: 760px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  transition: color 0.15s ease;
+  cursor: pointer;
+
+  &:hover { color: var(--primary); }
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.4px;
+  margin-bottom: 24px;
+}
+
+/* ── Form Card ── */
+.form-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border-light);
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+
+  &:last-child { margin-bottom: 0; }
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, textarea, select {
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    width: 100%;
+
+    &::placeholder { color: var(--text-muted); }
+    &:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.12);
+      background: var(--bg-card);
+    }
+  }
+
+  textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+}
+
+.form-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 8px 0 24px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+/* ── Form Actions ── */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1.5px solid var(--border-light);
+  margin-top: 8px;
+}
+
+/* ── Loading State ── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px;
+  color: var(--text-muted);
+
+  p { font-size: 14px; font-weight: 500; }
+}

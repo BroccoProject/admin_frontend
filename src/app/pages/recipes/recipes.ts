@@ -4,16 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RecipeService } from '../../services/recipe.service';
 import { Recipe, RecipeDeletePreview } from '../../models/recipe.model';
+import { PaginationComponent } from '../../components/pagination/pagination.component';
+import { DeleteModalComponent } from '../../components/delete-modal/delete-modal.component';
+import { ToastService } from '../../services/toast.service';
+import { HasRoleDirective } from '../../directives/has-role.directive';
+import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.directive';
 
 @Component({
   selector: 'app-recipes',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, DeleteModalComponent, HasRoleDirective],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
 export class RecipesPage implements OnInit {
   private readonly recipeService = inject(RecipeService);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   recipes = signal<Recipe[]>([]);
   total = signal(0);
@@ -32,34 +38,6 @@ export class RecipesPage implements OnInit {
   deletePreview = signal<RecipeDeletePreview | null>(null);
   previewLoading = signal(false);
   previewError = signal(false); // true when roadmap_nodes > 0
-
-  // Toast
-  showToast = signal(false);
-  toastMessage = signal('');
-  toastType = signal<'success' | 'error'>('success');
-
-  paginationInfo = computed(() => {
-    const t = this.total();
-    const p = this.page();
-    const ps = this.pageSize();
-    const from = t === 0 ? 0 : (p - 1) * ps + 1;
-    const to = Math.min(p * ps, t);
-    return `Showing ${from} to ${to} of ${t} recipes`;
-  });
-
-  pageNumbers = computed(() => {
-    const tp = this.totalPages();
-    const current = this.page();
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(tp, start + maxVisible - 1);
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
-  });
 
   blockedByRoadmap = computed(() => {
     const p = this.deletePreview();
@@ -93,7 +71,7 @@ export class RecipesPage implements OnInit {
         },
         error: () => {
           this.loading.set(false);
-          this.showToastMessage('Failed to load recipes', 'error');
+          this.toastService.show('Failed to load recipes', 'error');
         },
       });
   }
@@ -109,10 +87,8 @@ export class RecipesPage implements OnInit {
     this.loadRecipes();
   }
 
-  goToPage(p: number): void {
-    if (p < 1 || p > this.totalPages()) return;
-    this.page.set(p);
-    this.loadRecipes();
+  onEditRecipe(recipe: Recipe): void {
+    this.router.navigate(['/recipes', recipe.id, 'edit']);
   }
 
   confirmDelete(recipe: Recipe): void {
@@ -149,7 +125,7 @@ export class RecipesPage implements OnInit {
         this.showDeleteModal.set(false);
         this.recipeToDelete.set(null);
         this.deletePreview.set(null);
-        this.showToastMessage('Recipe deleted successfully!', 'success');
+        this.toastService.show('Recipe deleted successfully!', 'success');
         this.loadRecipes();
       },
       error: (err) => {
@@ -159,7 +135,7 @@ export class RecipesPage implements OnInit {
         this.deletePreview.set(null);
         const message =
           err?.error?.detail || 'An unexpected error occurred while deleting the recipe.';
-        this.showToastMessage(message, 'error');
+        this.toastService.show(message, 'error');
       },
     });
   }
@@ -171,12 +147,5 @@ export class RecipesPage implements OnInit {
       case 'master chef': return 'badge-hard';
       default: return 'badge-neutral';
     }
-  }
-
-  private showToastMessage(message: string, type: 'success' | 'error'): void {
-    this.toastMessage.set(message);
-    this.toastType.set(type);
-    this.showToast.set(true);
-    setTimeout(() => this.showToast.set(false), 4000);
   }
 }
