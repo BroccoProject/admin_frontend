@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login').then(m => m.LoginPage),
   },
   {
+    path: 'auth/pending',
+    loadComponent: () => import('./pages/auth-pending/auth-pending').then(m => m.AuthPendingPage),
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.DashboardPage),
     canActivate: [authGuard],

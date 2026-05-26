@@ -1,3 +1,6 @@
+@if (authService.isViewer()) {
+  <app-auth-pending></app-auth-pending>
+} @else {
 <div class="dash-root page-enter">
 
   <!-- Top greeting strip -->
@@ -56,3 +59,4 @@
   </div>
 
 </div>
+}

@@ -1,0 +1,66 @@
+<div class="login-root">
+  <!-- Left panel — branding -->
+  <div class="login-panel-left" aria-hidden="true">
+    <div class="panel-content">
+      <div class="brand">
+        <span class="brand-icon">🥦</span>
+        <span class="brand-name">Brocco</span>
+      </div>
+      <p class="panel-tagline">Admin Panel</p>
+      <div class="panel-divider"></div>
+      <ul class="panel-features">
+        <li>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Manage recipes &amp; categories
+        </li>
+        <li>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Control team access
+        </li>
+        <li>
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Review access requests
+        </li>
+      </ul>
+    </div>
+    <div class="panel-deco" aria-hidden="true">
+      <div class="deco-ring deco-ring--1"></div>
+      <div class="deco-ring deco-ring--2"></div>
+      <div class="deco-ring deco-ring--3"></div>
+    </div>
+  </div>
+
+  <!-- Right panel — form -->
+  <div class="login-panel-right">
+    <div class="login-card">
+      <div class="login-logo" style="font-size: 48px;">
+        @if (status() === 'not_registered') {
+          <span>ℹ️</span>
+        } @else if (status() === 'waiting_approval') {
+          <span>⏳</span>
+        } @else if (status() === 'access_rejected') {
+          <span>❌</span>
+        }
+      </div>
+      
+      @if (status() === 'not_registered') {
+        <h1>Access Required</h1>
+        <p class="login-sub">Your account is not registered in the admin panel. Please click the button below to request access.</p>
+      } @else if (status() === 'waiting_approval') {
+        <h1>Awaiting Approval</h1>
+        <p class="login-sub">Your access request is pending review. You will be notified once the administrator approves your request.</p>
+      } @else if (status() === 'access_rejected') {
+        <h1>Access Denied</h1>
+        <p class="login-sub">Your access request has been rejected. Please contact the administrator if you believe this is a mistake.</p>
+      }
+
+      @if (status() === 'not_registered') {
+        <button class="btn-google" (click)="requestAccess()" [disabled]="isRequesting" style="justify-content: center;">
+          {{ isRequesting ? 'Requesting...' : 'Request Access' }}
+        </button>
+      }
+
+      <p class="login-footer">Access is restricted to authorized team members only.</p>
+    </div>
+  </div>
+</div>

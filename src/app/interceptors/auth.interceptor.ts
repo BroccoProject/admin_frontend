@@ -17,7 +17,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         authService.logout();
         router.navigate(['/login']);
       }
-      if (error.status === 403) {
+      if (error.status === 403 && !req.url.includes('/auth/')) {
         router.navigate(['/forbidden']);
       }
       return throwError(() => error);

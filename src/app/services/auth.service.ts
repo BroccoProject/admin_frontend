@@ -18,6 +18,7 @@ export class AuthService {
   readonly isEditor = computed(() => 
     this.user()?.role === 'admin' || this.user()?.role === 'editor'
   );
+  readonly isViewer = computed(() => this.user()?.role === 'viewer');
   readonly loading = this._loading.asReadonly();
 
   private readonly apiUrl = 'http://localhost:8000/api/v1';
