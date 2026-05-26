@@ -1,0 +1,62 @@
+@if (authService.isViewer()) {
+  <app-auth-pending></app-auth-pending>
+} @else {
+<div class="dash-root page-enter">
+
+  <!-- Top greeting strip -->
+  <div class="dash-greeting">
+    @if (currentUser(); as user) {
+      <div class="greeting-text">
+        <span class="greeting-hi">Good day,</span>
+        <span class="greeting-name">{{ user.email.split('@')[0] }}</span>
+      </div>
+      <span class="role-chip" [attr.data-role]="user.role">{{ user.role }}</span>
+    }
+  </div>
+
+  <!-- Stat cards row -->
+  <div class="dash-stats">
+    <a routerLink="/recipes" class="stat-card stat-card--orange">
+      <div class="stat-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Recipes</span>
+        <span class="stat-cta">Browse →</span>
+      </div>
+    </a>
+
+    <a routerLink="/categories" class="stat-card stat-card--green">
+      <div class="stat-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Categories</span>
+        <span class="stat-cta">Browse →</span>
+      </div>
+    </a>
+
+    <a routerLink="/access-requests" class="stat-card stat-card--neutral">
+      <div class="stat-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Access &amp; Team</span>
+        <span class="stat-cta">Manage →</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Info card -->
+  <div class="dash-info">
+    <div class="info-icon">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <p class="info-title">Brocco Admin Panel</p>
+      <p class="info-body">Use the sidebar to navigate. Changes made here are reflected immediately in the mobile app.</p>
+    </div>
+  </div>
+
+</div>
+}
