@@ -1,15 +1,13 @@
 :host { display: block; }
 
-/* ── Two-panel layout ── */
 .login-root {
   display: flex;
   min-height: 100vh;
 }
 
-/* ── Left branding panel ── */
 .login-panel-left {
-  flex: 0 0 42%;
-  background: var(--c-primary);
+  flex: 0 0 40%;
+  background: #111111;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -24,61 +22,45 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.brand-icon { font-size: 28px; }
-.brand-name { font-size: 22px; font-weight: 800; color: var(--c-accent); letter-spacing: -.5px; }
+.brand-name { font-size: 20px; font-weight: 700; color: rgba(255,255,255,.9); letter-spacing: -.2px; }
 
 .panel-tagline {
-  font-size: 36px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -1px;
+  font-size: 32px;
+  font-weight: 700;
+  color: rgba(255,255,255,.85);
+  letter-spacing: -.8px;
   line-height: 1.15;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .panel-divider {
-  width: 36px;
-  height: 3px;
-  background: var(--c-orange);
-  margin-bottom: 28px;
-  border-radius: 2px;
+  width: 28px;
+  height: 2px;
+  background: rgba(255,255,255,.3);
+  margin-bottom: 24px;
 }
 
 .panel-features {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 
   li {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    font-weight: 500;
-    color: rgba(161,227,200,.85);
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,.5);
 
-    svg { flex-shrink: 0; color: var(--c-accent); }
+    svg { flex-shrink: 0; color: rgba(255,255,255,.4); }
   }
 }
 
-/* Decorative rings */
-.panel-deco { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-
-.deco-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(161,227,200,.08);
-}
-
-.deco-ring--1 { width: 400px; height: 400px; bottom: -160px; right: -140px; }
-.deco-ring--2 { width: 260px; height: 260px; bottom: -60px; right: -60px; border-color: rgba(161,227,200,.12); }
-.deco-ring--3 { width: 130px; height: 130px; bottom: 20px; right: 20px; border-color: rgba(243,156,18,.25); }
-
-/* ── Right form panel ── */
 .login-panel-right {
   flex: 1;
   display: flex;
@@ -90,57 +72,65 @@
 
 .login-card {
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   animation: pageIn var(--t-med) var(--ease-out) both;
   text-align: center;
 }
 
 .login-logo {
-  font-size: 40px;
-  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  margin: 0 auto 20px;
+  color: var(--c-txt-2);
 }
 
 .login-card h1 {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--c-primary);
-  letter-spacing: -.5px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-txt);
+  letter-spacing: -.3px;
   margin-bottom: 8px;
 }
 
 .login-sub {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--c-txt-3);
   line-height: 1.6;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
-/* Google button */
-.btn-google {
+.btn-google,
+.btn-request-access {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 13px 24px;
-  border: 1.5px solid var(--c-border);
-  border-radius: var(--r-lg);
+  padding: 11px 20px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
   background: var(--c-bg-card);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--c-txt);
-  transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast) var(--ease), box-shadow var(--t-fast);
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
   cursor: pointer;
   margin-bottom: 20px;
   box-shadow: var(--sh-sm);
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--c-grey);
     background: #fff;
-    transform: translateY(-2px);
     box-shadow: var(--sh-md);
   }
-  &:active { transform: translateY(0); }
+
+  &:disabled { opacity: .55; cursor: not-allowed; }
 }
 
 .login-footer {
@@ -149,7 +139,6 @@
   line-height: 1.6;
 }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
   .login-panel-left { display: none; }
   .login-panel-right { padding: 32px 16px; }

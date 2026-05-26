@@ -15,22 +15,17 @@ export class AccessRequestsPage implements OnInit {
   private readonly userService = inject(UserManagementService);
   private readonly toastService = inject(ToastService);
 
-  // Tabs: 'pending' | 'archived' | 'team'
   activeTab = signal<'pending' | 'archived' | 'team'>('pending');
 
-  // Data signals
   pendingRequests = signal<AccessRequest[]>([]);
   archivedRequests = signal<AccessRequest[]>([]);
   teamMembers = signal<TeamMember[]>([]);
 
-  // Search/Filters
   searchQuery = signal('');
 
-  // UI States
   loading = signal(false);
   actionLoading = signal(false);
 
-  // Modals state
   showRoleModal = signal(false);
   selectedMemberForRole = signal<TeamMember | null>(null);
   selectedRole = signal<'admin' | 'editor'>('editor');
@@ -38,7 +33,6 @@ export class AccessRequestsPage implements OnInit {
   showRevokeModal = signal(false);
   selectedMemberForRevoke = signal<TeamMember | null>(null);
 
-  // Computed filtered arrays
   filteredPending = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const reqs = this.pendingRequests();
@@ -97,9 +91,6 @@ export class AccessRequestsPage implements OnInit {
         },
       });
     } else if (tab === 'archived') {
-      // Fetch both approved and rejected requests by not specifying status or calling twice.
-      // Wait, backend SQLAdminRepository filters by status if provided, else returns all.
-      // Wait! Let's get all requests and filter out the pending ones.
       this.userService.getAccessRequests().subscribe({
         next: (res) => {
           const nonPending = res.items.filter((r) => r.status !== 'pending');
@@ -131,7 +122,6 @@ export class AccessRequestsPage implements OnInit {
     }
   }
 
-  // Access Request Actions
   approveRequest(request: AccessRequest): void {
     this.actionLoading.set(true);
     this.userService.approveAccessRequest(request.id).subscribe({
@@ -174,7 +164,6 @@ export class AccessRequestsPage implements OnInit {
     });
   }
 
-  // Team Member Role Modal Actions
   openRoleModal(member: TeamMember): void {
     this.selectedMemberForRole.set(member);
     this.selectedRole.set(member.role);
@@ -213,7 +202,6 @@ export class AccessRequestsPage implements OnInit {
       });
   }
 
-  // Team Member Revoke Modal Actions
   openRevokeModal(member: TeamMember): void {
     this.selectedMemberForRevoke.set(member);
     this.showRevokeModal.set(true);

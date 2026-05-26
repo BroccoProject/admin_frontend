@@ -26,7 +26,6 @@ export class AuthService {
   async loadUser(): Promise<AuthUser | null> {
     this._loading.set(true);
     try {
-      // The interceptor adds withCredentials: true globally, but we can add it here too if needed
       const user = await firstValueFrom(
         this.http.get<AuthUser>(`${this.apiUrl}/auth/me`, { withCredentials: true })
       );
@@ -41,7 +40,6 @@ export class AuthService {
   }
 
   login(): void {
-    // Redirects browser completely to the backend OAuth flow
     window.location.href = `${this.apiUrl}/auth/google`;
   }
 
