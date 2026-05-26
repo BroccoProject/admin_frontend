@@ -30,6 +30,14 @@ export class CategoryService {
     return this.http.get<Category>(`${this.baseUrl}/${id}`);
   }
 
+  getCategoryById(id: string): Observable<Category> {
+    return this.http.get<Category>(`${this.baseUrl}/${id}`);
+  }
+
+  updateCategory(id: string, data: { title?: string; description?: string }): Observable<Category> {
+    return this.http.patch<Category>(`${this.baseUrl}/${id}`, data);
+  }
+
   getDeletePreview(id: string): Observable<CategoryDeletePreview> {
     return this.http.get<CategoryDeletePreview>(`${this.baseUrl}/${id}/delete-preview`);
   }

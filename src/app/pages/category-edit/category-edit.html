@@ -1,0 +1,40 @@
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading category…</p>
+  </div>
+} @else {
+  <a routerLink="/categories" class="back-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Categories
+  </a>
+
+  <h1>Edit Category</h1>
+
+  <div class="form-card">
+    <form (ngSubmit)="save()" #form="ngForm">
+
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input type="text" id="title" name="title" [ngModel]="formData().title" (ngModelChange)="formData().title = $event" placeholder="Category title" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="4" [ngModel]="formData().description" (ngModelChange)="formData().description = $event" placeholder="Short description…"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || saving()">
+          @if (saving()) {
+            <span class="spinner-small"></span> Saving…
+          } @else {
+            Save Changes
+          }
+        </button>
+      </div>
+
+    </form>
+  </div>
+}

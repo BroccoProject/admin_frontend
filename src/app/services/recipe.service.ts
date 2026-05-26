@@ -30,6 +30,14 @@ export class RecipeService {
     return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
   }
 
+  getRecipeById(id: string): Observable<Recipe> {
+    return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
+  }
+
+  updateRecipe(id: string, data: Partial<Recipe>): Observable<Recipe> {
+    return this.http.patch<Recipe>(`${this.baseUrl}/${id}`, data);
+  }
+
   getDeletePreview(id: string): Observable<RecipeDeletePreview> {
     return this.http.get<RecipeDeletePreview>(`${this.baseUrl}/${id}/delete-preview`);
   }

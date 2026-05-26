@@ -17,18 +17,15 @@ export class RecipeCreatePage {
   private readonly recipeService = inject(RecipeService);
   private readonly router = inject(Router);
 
-  // Core State
   rawText = signal('');
   feedbackText = signal('');
   threadId = signal<string | null>(null);
   draft = signal<RecipeDraft | null>(null);
-  
-  // UI State
+
   isProcessing = signal(false);
   isSubmitting = signal(false);
   activeTab = signal<'general' | 'ingredients' | 'steps'>('general');
 
-  // Predefined ENUMs
   readonly categories = [
     'Beef', 'Breakfast', 'Chicken', 'Dessert', 'Goat', 'Lamb',
     'Miscellaneous', 'Pasta', 'Pork', 'Seafood', 'Side', 'Starter',
@@ -57,7 +54,6 @@ export class RecipeCreatePage {
     'Vegan', 'Vegetables', 'Vegetarian'
   ];
 
-  // Toast
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error'>('success');
@@ -136,7 +132,6 @@ export class RecipeCreatePage {
     this.router.navigate(['/recipes']);
   }
 
-  // Helper helper to safely update nested fields
   updateField<K extends keyof RecipeDraft>(key: K, value: RecipeDraft[K]): void {
     const current = this.draft();
     if (current) {
@@ -192,7 +187,6 @@ export class RecipeCreatePage {
     if (current) {
       const updated = { ...current };
       updated.steps = updated.steps.filter((_, i) => i !== index);
-      // Re-normalize step numbers
       updated.steps = updated.steps.map((step, i) => ({
         ...step,
         step_number: i + 1
