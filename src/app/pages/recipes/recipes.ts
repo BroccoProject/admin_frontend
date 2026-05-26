@@ -31,13 +31,12 @@ export class RecipesPage implements OnInit {
   sortOrder = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
 
-  // Delete modal state
   showDeleteModal = signal(false);
   recipeToDelete = signal<Recipe | null>(null);
   deleting = signal(false);
   deletePreview = signal<RecipeDeletePreview | null>(null);
   previewLoading = signal(false);
-  previewError = signal(false); // true when roadmap_nodes > 0
+  previewError = signal(false);
 
   blockedByRoadmap = computed(() => {
     const p = this.deletePreview();

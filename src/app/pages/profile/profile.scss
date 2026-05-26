@@ -2,133 +2,126 @@
 
 .profile-root {
   padding: 36px 40px;
-  max-width: 640px;
+  max-width: 620px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-/* ── Header ── */
 .profile-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 28px;
-  background: var(--c-primary);
+  gap: 16px;
+  padding: 24px;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border-2);
   border-radius: var(--r-xl);
+  box-shadow: var(--sh-sm);
   animation: pageIn var(--t-med) var(--ease-out) both;
 }
 
 .profile-avatar {
-  width: 64px; height: 64px;
+  width: 52px; height: 52px;
   border-radius: 50%;
-  background: var(--c-accent-2);
-  border: 2.5px solid var(--c-accent);
+  background: var(--c-grey-bg);
+  border: 1px solid var(--c-border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px; font-weight: 800;
-  color: var(--c-primary);
+  font-size: 20px; font-weight: 700;
+  color: var(--c-txt);
   flex-shrink: 0;
 }
 
 .profile-identity {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .profile-email {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -.2px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-txt);
+  letter-spacing: -.1px;
 }
 
 .role-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 99px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: .2px;
   text-transform: capitalize;
   width: fit-content;
-
-  &[data-role="admin"]  { background: var(--c-accent); color: var(--c-primary); }
-  &[data-role="editor"] { background: var(--c-orange); color: #fff; }
-  &[data-role="viewer"] { background: rgba(255,255,255,.15); color: rgba(255,255,255,.8); }
+  background: var(--c-grey-bg);
+  color: var(--c-txt-3);
+  border: 1px solid var(--c-border-2);
 }
 
-/* ── Info Grid ── */
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   animation: pageIn var(--t-med) var(--ease-out) 60ms both;
 }
 
 .info-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 20px;
+  gap: 5px;
+  padding: 16px 18px;
   background: var(--c-bg-card);
-  border: 1.5px solid var(--c-border-2);
+  border: 1px solid var(--c-border-2);
   border-radius: var(--r-xl);
   box-shadow: var(--sh-sm);
-  transition: border-color var(--t-fast);
 
-  &:hover { border-color: var(--c-border); }
   &--permissions { grid-column: 1 / -1; }
 }
 
 .info-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .7px;
+  letter-spacing: .6px;
   color: var(--c-txt-3);
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--c-txt);
   line-height: 1.5;
 }
 
-/* ── Permissions ── */
 .perm-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 4px;
 }
 
 .perm-tag {
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 99px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   background: var(--c-grey-bg);
   color: var(--c-txt-3);
-  border: 1.5px solid var(--c-border-2);
-  transition: all var(--t-fast);
+  border: 1px solid var(--c-border-2);
 
   &.perm-on {
-    background: var(--c-accent-2);
-    color: var(--c-primary);
-    border-color: var(--c-accent);
+    background: var(--c-primary);
+    color: #fff;
+    border-color: var(--c-primary);
   }
 }
 
-/* ── Actions ── */
 .profile-actions {
   animation: pageIn var(--t-med) var(--ease-out) 120ms both;
 }
 
 .btn-signout { width: 100%; justify-content: center; }
 
-/* ── Responsive ── */
 @media (max-width: 600px) {
   .profile-root { padding: 20px 16px; }
   .profile-grid { grid-template-columns: 1fr; }

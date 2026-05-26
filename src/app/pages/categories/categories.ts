@@ -31,7 +31,6 @@ export class CategoriesPage implements OnInit {
   sortOrder = signal<'asc' | 'desc'>('asc');
   loading = signal(false);
 
-  // Delete modal state
   showDeleteModal = signal(false);
   categoryToDelete = signal<Category | null>(null);
   deleting = signal(false);
@@ -81,7 +80,6 @@ export class CategoriesPage implements OnInit {
     this.router.navigate(['/categories', category.id, 'edit']);
   }
 
-  // Delete flow
   confirmDelete(category: Category): void {
     this.categoryToDelete.set(category);
     this.deletePreview.set(null);
@@ -94,7 +92,6 @@ export class CategoriesPage implements OnInit {
         this.previewLoading.set(false);
       },
       error: () => {
-        // Non-fatal: modal still opens but without preview stats
         this.previewLoading.set(false);
       },
     });
