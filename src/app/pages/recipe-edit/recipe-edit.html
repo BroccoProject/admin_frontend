@@ -1,78 +1,398 @@
 @if (loading()) {
-  <div class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading recipe…</p>
-  </div>
+<div class="loading-overlay">
+  <div class="spinner"></div>
+</div>
 } @else {
-  <a routerLink="/recipes" class="back-link">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+
+<div class="control-panel">
+  <button class="btn-back" routerLink="/recipes" id="btn-back-recipes">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
     Back to Recipes
-  </a>
+  </button>
 
-  <h1>Edit Recipe</h1>
+  <div class="tabs-navigation">
+    <button class="tab-btn" [class.active]="activeTab() === 'general'" (click)="setTab('general')" id="tab-general">
+      General Info
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'ingredients'" (click)="setTab('ingredients')"
+      id="tab-ingredients">
+      Ingredients
+      @if (ingredientCount() > 0) {
+      <span class="tab-badge">{{ ingredientCount() }}</span>
+      }
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'steps'" (click)="setTab('steps')" id="tab-steps">
+      Steps
+      @if (stepCount() > 0) {
+      <span class="tab-badge">{{ stepCount() }}</span>
+      }
+    </button>
+  </div>
 
-  <div class="edit-page">
-    <div class="form-card">
-      <form (ngSubmit)="save()" #form="ngForm">
+  <div class="save-controls">
+    <button class="btn-secondary" (click)="cancel()" id="btn-cancel">Cancel</button>
+    <button class="btn-primary" (click)="save()" [disabled]="saving()" id="btn-save">
+      @if (saving()) {
+      <span class="spinner-small"></span> Saving…
+      } @else {
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <polyline points="17 21 17 13 7 13 7 21" />
+        <polyline points="7 3 7 8 15 8" />
+      </svg>
+      Save Changes
+      }
+    </button>
+  </div>
+</div>
 
-        <div class="form-group">
-          <label for="title">Title *</label>
-          <input type="text" id="title" name="title" [ngModel]="formData().title" (ngModelChange)="formData().title = $event" placeholder="Recipe title" required>
+<div class="tab-content-container">
+
+  <!-- ═══════════════════ GENERAL INFO TAB ═══════════════════ -->
+  @if (activeTab() === 'general') {
+  <div class="form-scroll-area">
+    <div class="form-container">
+
+      <div class="form-group">
+        <label for="edit-title">Recipe Title <span class="required">*</span></label>
+        <input type="text" id="edit-title" [ngModel]="recipe()!.title"
+          (ngModelChange)="updateField('title', $event)" placeholder="Recipe title" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="edit-category">Category</label>
+          <input type="text" id="edit-category" [ngModel]="recipe()!.category"
+            (ngModelChange)="updateField('category', $event)" placeholder="e.g. Dessert" />
         </div>
-
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" name="description" rows="4" [ngModel]="formData().description" (ngModelChange)="formData().description = $event" placeholder="Short description…"></textarea>
+        <div class="form-group half">
+          <label for="edit-area">Area / Cuisine</label>
+          <input type="text" id="edit-area" [ngModel]="recipe()!.area"
+            (ngModelChange)="updateField('area', $event)" placeholder="e.g. Italian" />
         </div>
+      </div>
 
-        <div class="form-divider"></div>
-        <div class="section-title">Details</div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label for="difficulty_level">Difficulty</label>
-            <select id="difficulty_level" name="difficulty_level" [ngModel]="formData().difficulty_level" (ngModelChange)="formData().difficulty_level = $event">
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Master Chef">Master Chef</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="duration_minutes">Duration (min)</label>
-            <input type="number" id="duration_minutes" name="duration_minutes" [ngModel]="formData().duration_minutes" (ngModelChange)="formData().duration_minutes = $event" placeholder="e.g. 30">
-          </div>
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="edit-duration">Duration (Minutes)</label>
+          <input type="number" id="edit-duration" [ngModel]="recipe()!.duration_minutes"
+            (ngModelChange)="updateField('duration_minutes', $event)" placeholder="e.g. 45" />
         </div>
-
-        <div class="form-divider"></div>
-        <div class="section-title">Links & Tags</div>
-
-        <div class="form-group">
-          <label for="youtube_url">YouTube URL</label>
-          <input type="url" id="youtube_url" name="youtube_url" [ngModel]="formData().youtube_url" (ngModelChange)="formData().youtube_url = $event" placeholder="https://youtube.com/...">
+        <div class="form-group half">
+          <label for="edit-difficulty">Difficulty</label>
+          <select id="edit-difficulty" [ngModel]="recipe()!.difficulty_level"
+            (ngModelChange)="updateField('difficulty_level', $event)">
+            <option [ngValue]="null">Select Difficulty</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Master Chef">Master Chef</option>
+          </select>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label for="source_url">Source URL</label>
-          <input type="url" id="source_url" name="source_url" [ngModel]="formData().source_url" (ngModelChange)="formData().source_url = $event" placeholder="https://...">
-        </div>
+      <div class="form-group">
+        <label for="edit-description">Description</label>
+        <textarea id="edit-description" rows="3" [ngModel]="recipe()!.description"
+          (ngModelChange)="updateField('description', $event)" placeholder="Brief description…"></textarea>
+      </div>
 
-        <div class="form-group">
-          <label for="tags">Tags (comma-separated)</label>
-          <input type="text" id="tags" name="tags" [ngModel]="tagsString()" (ngModelChange)="tagsString.set($event)" placeholder="e.g. vegan, dessert, quick">
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
-          <button type="submit" class="btn-primary" [disabled]="form.invalid || saving()">
-            @if (saving()) {
-              <span class="spinner-small"></span> Saving…
-            } @else {
-              Save Changes
+      <div class="form-group">
+        <label>Tags</label>
+        <div class="tags-selector-container">
+          <div class="selected-tags-chips">
+            @for (tag of recipe()!.tags; track tag) {
+            <span class="selected-tag-chip">
+              {{ tag }}
+              <button class="remove-tag-btn" (click)="toggleTag(tag)">×</button>
+            </span>
+            } @empty {
+            <span class="no-tags-placeholder">No tags selected. Click below to add.</span>
             }
+          </div>
+          <div class="available-tags-list">
+            @for (tag of availableTags; track tag) {
+            <button type="button" class="available-tag-btn" [class.selected]="hasTag(tag)" (click)="toggleTag(tag)">
+              {{ tag }}
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <div class="form-group">
+        <label for="edit-image-url">Image URL</label>
+        <input type="url" id="edit-image-url" [ngModel]="recipe()!.image_url"
+          (ngModelChange)="updateField('image_url', $event)" placeholder="https://example.com/image.jpg" />
+        @if (recipe()!.image_url) {
+        <div class="image-preview-container">
+          <img [src]="recipe()!.image_url" alt="Recipe Preview" class="image-preview" />
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="edit-youtube">YouTube URL</label>
+        <input type="url" id="edit-youtube" [ngModel]="recipe()!.youtube_url"
+          (ngModelChange)="updateField('youtube_url', $event)" placeholder="https://youtube.com/..." />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-source">Source URL</label>
+        <input type="url" id="edit-source" [ngModel]="recipe()!.source_url"
+          (ngModelChange)="updateField('source_url', $event)" placeholder="https://..." />
+      </div>
+
+    </div>
+  </div>
+  }
+
+  <!-- ═══════════════════ INGREDIENTS TAB ═══════════════════ -->
+  @if (activeTab() === 'ingredients') {
+  <div class="table-container">
+    <table class="data-table" id="ingredients-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ingredient</th>
+          <th>Amount</th>
+          <th>Unit</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ri of recipe()!.ingredients; track $index; let i = $index) {
+        <tr>
+          <td class="cell-num">{{ i + 1 }}</td>
+          <td>
+            <select class="inline-select" [ngModel]="ri.ingredient.id"
+              (ngModelChange)="onRecipeIngredientChange(i, $event)">
+              @for (ing of allIngredients(); track ing.id) {
+              <option [value]="ing.id">{{ ing.name }}</option>
+              }
+            </select>
+          </td>
+          <td>
+            <input type="number" class="inline-input narrow" [(ngModel)]="ri.amount" placeholder="—" />
+          </td>
+          <td>
+            <input type="text" class="inline-input narrow" [(ngModel)]="ri.unit" placeholder="unit" />
+          </td>
+          <td>
+            <button class="btn-icon btn-delete" (click)="removeRecipeIngredient(i)" title="Remove ingredient">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="5" class="empty-state">
+            <div class="empty-content">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+                <line x1="6" y1="17" x2="18" y2="17" />
+              </svg>
+              <p>No ingredients yet</p>
+              <span class="empty-sub">Click "Add Ingredient" to add one.</span>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="table-footer-actions">
+      <button class="btn-add-dashed" (click)="addRecipeIngredient()" [disabled]="allIngredients().length === 0"
+        id="btn-add-ingredient">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+        Add Ingredient
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- ═══════════════════ STEPS TAB ═══════════════════ -->
+  @if (activeTab() === 'steps') {
+  <div class="form-scroll-area">
+    <div class="steps-container" cdkDropList (cdkDropListDropped)="dropStep($event)">
+
+      @for (step of recipe()!.steps; track $index; let si = $index) {
+      <div class="step-card" cdkDrag>
+        <div class="step-card-header">
+          <div class="drag-handle" cdkDragHandle title="Drag to reorder step">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="5" r="1" />
+              <circle cx="9" cy="12" r="1" />
+              <circle cx="9" cy="19" r="1" />
+              <circle cx="15" cy="5" r="1" />
+              <circle cx="15" cy="12" r="1" />
+              <circle cx="15" cy="19" r="1" />
+            </svg>
+          </div>
+          <span class="step-num-badge">Step {{ step.step_number }}</span>
+          <div class="step-duration">
+            <input type="number" [(ngModel)]="step.duration_seconds" placeholder="sec" class="inline-input narrow" />
+            <span class="duration-label">seconds</span>
+          </div>
+          <button class="btn-icon btn-delete" (click)="removeStep(si)" title="Remove step">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            </svg>
           </button>
         </div>
 
-      </form>
+        <div class="step-card-body">
+          <textarea rows="2" [(ngModel)]="step.instruction" placeholder="Step instruction..."></textarea>
+
+          <!-- Step Ingredients -->
+          <div class="step-sub-section">
+            <div class="sub-section-header">
+              <span class="sub-section-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+                  <line x1="6" y1="17" x2="18" y2="17" />
+                </svg>
+                Ingredients ({{ step.ingredients.length }})
+              </span>
+              <button class="btn-add-small" (click)="addStepIngredient(si)"
+                [disabled]="allIngredients().length === 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                Add
+              </button>
+            </div>
+            @if (step.ingredients.length > 0) {
+            <div class="sub-table">
+              @for (sing of step.ingredients; track $index; let sii = $index) {
+              <div class="sub-row">
+                <select class="inline-select" [ngModel]="sing.ingredient.id"
+                  (ngModelChange)="onStepIngredientChange(si, sii, $event)">
+                  @for (ing of allIngredients(); track ing.id) {
+                  <option [value]="ing.id">{{ ing.name }}</option>
+                  }
+                </select>
+                <input type="number" class="inline-input narrow" [(ngModel)]="sing.amount" placeholder="amt" />
+                <input type="text" class="inline-input narrow" [(ngModel)]="sing.unit" placeholder="unit" />
+                <div class="action-pills">
+                  @for (action of availableActions; track action) {
+                  <button type="button" class="action-pill"
+                    [class.active]="sing.actions.includes(action)"
+                    (click)="toggleStepIngredientAction(si, sii, action)">
+                    {{ action }}
+                  </button>
+                  }
+                </div>
+                <button class="btn-icon-sm btn-delete" (click)="removeStepIngredient(si, sii)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              }
+            </div>
+            }
+          </div>
+
+          <!-- Step Items -->
+          <div class="step-sub-section">
+            <div class="sub-section-header">
+              <span class="sub-section-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                </svg>
+                Items / Utensils ({{ step.items.length }})
+              </span>
+              <button class="btn-add-small" (click)="addStepItem(si)" [disabled]="allItems().length === 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                Add
+              </button>
+            </div>
+            @if (step.items.length > 0) {
+            <div class="sub-table">
+              @for (sit of step.items; track $index; let siti = $index) {
+              <div class="sub-row items-row">
+                <select class="inline-select" [ngModel]="sit.item.id"
+                  (ngModelChange)="onStepItemChange(si, siti, $event)">
+                  @for (item of allItems(); track item.id) {
+                  <option [value]="item.id">{{ item.name }} [{{ item.tag }}]</option>
+                  }
+                </select>
+                <span class="item-tag-badge">{{ sit.item.tag }}</span>
+                <button class="btn-icon-sm btn-delete" (click)="removeStepItem(si, siti)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              }
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+      } @empty {
+      <div class="empty-steps-card">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </svg>
+        <p>No steps yet</p>
+        <span class="empty-sub">Click "Add Step" to create one.</span>
+      </div>
+      }
+
+      <div class="table-footer-actions">
+        <button class="btn-add-dashed" (click)="addStep()" id="btn-add-step">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          Add Step
+        </button>
+      </div>
+
     </div>
   </div>
+  }
+
+</div>
+
 }

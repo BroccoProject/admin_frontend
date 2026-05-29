@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Recipe, RecipeListResponse, RecipeDeletePreview } from '../models/recipe.model';
+import {
+  Recipe, RecipeListResponse, RecipeDeletePreview,
+  RecipeDetail, RecipeFullUpdate,
+  IngredientRef, ItemRef,
+} from '../models/recipe.model';
 import { RecipeDraft } from '../models/parser.model';
 import { environment } from '../../environments/environment';
 
@@ -40,8 +44,16 @@ export class RecipeService {
     return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
   }
 
+  getRecipeDetail(id: string): Observable<RecipeDetail> {
+    return this.http.get<RecipeDetail>(`${this.baseUrl}/${id}/detail`);
+  }
+
   updateRecipe(id: string, data: Partial<Recipe>): Observable<Recipe> {
     return this.http.patch<Recipe>(`${this.baseUrl}/${id}`, data);
+  }
+
+  updateRecipeFull(id: string, data: RecipeFullUpdate): Observable<RecipeDetail> {
+    return this.http.put<RecipeDetail>(`${this.baseUrl}/${id}/full`, data);
   }
 
   getDeletePreview(id: string): Observable<RecipeDeletePreview> {
@@ -54,5 +66,13 @@ export class RecipeService {
 
   createRecipe(draft: RecipeDraft): Observable<{ id: string; status: string }> {
     return this.http.post<{ id: string; status: string }>(this.baseUrl, draft);
+  }
+
+  getAllIngredients(): Observable<{ items: IngredientRef[] }> {
+    return this.http.get<{ items: IngredientRef[] }>(`${this.baseUrl}/ingredients`);
+  }
+
+  getAllItems(): Observable<{ items: ItemRef[] }> {
+    return this.http.get<{ items: ItemRef[] }>(`${this.baseUrl}/items`);
   }
 }

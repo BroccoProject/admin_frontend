@@ -1,0 +1,290 @@
+@if (loading()) {
+<div class="loading-overlay">
+  <div class="spinner"></div>
+</div>
+} @else {
+
+<div class="control-panel">
+  <button class="btn-back" routerLink="/recipes" id="btn-back-recipes">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+    Back to Recipes
+  </button>
+
+  <div class="tabs-navigation">
+    <button class="tab-btn" [class.active]="activeTab() === 'general'" (click)="setTab('general')" id="tab-general">
+      General Info
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'ingredients'" (click)="setTab('ingredients')"
+      id="tab-ingredients">
+      Ingredients
+      @if (ingredientCount() > 0) {
+      <span class="tab-badge">{{ ingredientCount() }}</span>
+      }
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'steps'" (click)="setTab('steps')" id="tab-steps">
+      Steps
+      @if (stepCount() > 0) {
+      <span class="tab-badge">{{ stepCount() }}</span>
+      }
+    </button>
+  </div>
+
+  <div class="actions-controls">
+    <button class="btn-icon btn-edit" title="Edit Recipe" (click)="onEditRecipe()" *hasRole="'editor'" id="btn-edit">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      <span class="btn-label">Edit</span>
+    </button>
+    <button class="btn-icon btn-delete" title="Delete Recipe" (click)="confirmDelete()" *hasRole="'admin'" id="btn-delete">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      <span class="btn-label">Delete</span>
+    </button>
+  </div>
+</div>
+
+<div class="tab-content-container">
+
+  <!-- ═══════════════════ GENERAL INFO TAB ═══════════════════ -->
+  @if (activeTab() === 'general') {
+  <div class="form-scroll-area">
+    <div class="info-container">
+
+      <div class="info-header">
+        <h1 class="recipe-title">{{ recipe()!.title }}</h1>
+        <div class="recipe-meta-badges">
+          @if (recipe()!.difficulty_level) {
+            <span class="badge" [ngClass]="difficultyClass(recipe()!.difficulty_level)">{{ recipe()!.difficulty_level }}</span>
+          }
+          @if (recipe()!.duration_minutes) {
+            <span class="badge badge-neutral">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {{ recipe()!.duration_minutes }} min
+            </span>
+          }
+          @if (recipe()!.category) {
+            <span class="badge badge-area">{{ recipe()!.category }}</span>
+          }
+          @if (recipe()!.area) {
+            <span class="badge badge-area">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ recipe()!.area }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="info-section">
+        @if (recipe()!.description) {
+          <p class="recipe-description">{{ recipe()!.description }}</p>
+        } @else {
+          <p class="recipe-description text-muted">No description provided.</p>
+        }
+      </div>
+
+      <div class="info-section">
+        <h3 class="section-title">Tags</h3>
+        <div class="tags-list">
+          @for (tag of recipe()!.tags; track tag) {
+            <span class="tag-chip">{{ tag }}</span>
+          } @empty {
+            <span class="text-muted">No tags</span>
+          }
+        </div>
+      </div>
+
+      <div class="info-divider"></div>
+
+      <div class="info-row">
+        <div class="info-group">
+          <h3 class="section-title">Image Preview</h3>
+          @if (recipe()!.image_url) {
+          <div class="image-preview-container">
+            <img [src]="recipe()!.image_url" alt="Recipe Preview" class="image-preview" />
+          </div>
+          <a [href]="recipe()!.image_url" target="_blank" class="external-link">{{ recipe()!.image_url }}</a>
+          } @else {
+            <span class="text-muted">No image</span>
+          }
+        </div>
+
+        <div class="info-group">
+          <h3 class="section-title">Links</h3>
+          <div class="links-list">
+            @if (recipe()!.youtube_url) {
+              <a [href]="recipe()!.youtube_url" target="_blank" class="btn-link youtube-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+                Watch on YouTube
+              </a>
+            }
+            @if (recipe()!.source_url) {
+              <a [href]="recipe()!.source_url" target="_blank" class="btn-link source-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Original Source
+              </a>
+            }
+            @if (!recipe()!.youtube_url && !recipe()!.source_url) {
+              <span class="text-muted">No external links provided.</span>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  }
+
+  <!-- ═══════════════════ INGREDIENTS TAB ═══════════════════ -->
+  @if (activeTab() === 'ingredients') {
+  <div class="table-container">
+    <table class="data-table" id="ingredients-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ingredient</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ri of recipe()!.ingredients; track $index; let i = $index) {
+        <tr>
+          <td class="cell-num">{{ i + 1 }}</td>
+          <td class="cell-bold">{{ ri.ingredient.name }}</td>
+          <td>
+            @if (ri.amount) {
+              {{ ri.amount }} {{ ri.unit || '' }}
+            } @else {
+              <span class="text-muted">—</span>
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="3" class="empty-state">
+            <div class="empty-content">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+                <line x1="6" y1="17" x2="18" y2="17" />
+              </svg>
+              <p>No ingredients in this recipe</p>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- ═══════════════════ STEPS TAB ═══════════════════ -->
+  @if (activeTab() === 'steps') {
+  <div class="form-scroll-area">
+    <div class="steps-container">
+
+      @for (step of recipe()!.steps; track $index) {
+      <div class="step-card">
+        <div class="step-card-header">
+          <span class="step-num-badge">Step {{ step.step_number }}</span>
+          @if (step.duration_seconds) {
+            <div class="step-duration">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="duration-label">{{ step.duration_seconds }} sec</span>
+            </div>
+          }
+        </div>
+
+        <div class="step-card-body">
+          <p class="step-instruction">{{ step.instruction || 'No instruction text provided.' }}</p>
+
+          <div class="step-requirements">
+            <!-- Step Ingredients -->
+            @if (step.ingredients.length > 0) {
+            <div class="step-sub-section">
+              <div class="sub-section-header">
+                <span class="sub-section-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
+                    <line x1="6" y1="17" x2="18" y2="17" />
+                  </svg>
+                  Ingredients
+                </span>
+              </div>
+              <div class="sub-table">
+                @for (sing of step.ingredients; track $index) {
+                <div class="sub-row">
+                  <span class="item-name">{{ sing.ingredient.name }}</span>
+                  <span class="item-amount">{{ sing.amount ? sing.amount + ' ' + (sing.unit || '') : '—' }}</span>
+                  @if (sing.actions.length > 0) {
+                    <div class="action-pills">
+                      @for (action of sing.actions; track action) {
+                        <span class="action-pill">{{ action }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+            }
+
+            <!-- Step Items -->
+            @if (step.items.length > 0) {
+            <div class="step-sub-section">
+              <div class="sub-section-header">
+                <span class="sub-section-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  </svg>
+                  Items / Utensils
+                </span>
+              </div>
+              <div class="sub-table">
+                @for (sit of step.items; track $index) {
+                <div class="sub-row items-row">
+                  <span class="item-name">{{ sit.item.name }}</span>
+                  <span class="item-tag-badge">{{ sit.item.tag }}</span>
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+      } @empty {
+      <div class="empty-steps-card">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </svg>
+        <p>No steps in this recipe</p>
+      </div>
+      }
+
+    </div>
+  </div>
+  }
+
+</div>
+
+<app-delete-modal
+  [visible]="showDeleteModal()"
+  [itemName]="recipe()!.title"
+  [preview]="deletePreview()"
+  [previewLoading]="previewLoading()"
+  [deleting]="deleting()"
+  [blocked]="blockedByRoadmap()"
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+></app-delete-modal>
+
+}

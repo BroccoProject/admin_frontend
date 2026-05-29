@@ -132,7 +132,7 @@
             }
           </td>
           <td class="cell-title">
-            <span class="recipe-name">{{ recipe.title }}</span>
+            <a [routerLink]="['/recipes', recipe.id]" class="recipe-name recipe-name-link">{{ recipe.title }}</a>
             @if (recipe.duration_minutes) {
               <span class="recipe-meta">{{ recipe.duration_minutes }} min</span>
             }

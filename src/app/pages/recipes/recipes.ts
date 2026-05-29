@@ -9,9 +9,11 @@ import { ToastService } from '../../services/toast.service';
 import { HasRoleDirective } from '../../directives/has-role.directive';
 import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.directive';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-recipes',
-  imports: [CommonModule, FormsModule, DeleteModalComponent, HasRoleDirective],
+  imports: [CommonModule, FormsModule, RouterModule, DeleteModalComponent, HasRoleDirective],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })

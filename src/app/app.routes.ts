@@ -47,6 +47,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'recipes/:id',
+    loadComponent: () => import('./pages/recipe-view/recipe-view').then(m => m.RecipeViewPage),
+    canActivate: [authGuard],
+  },
+  {
     path: 'categories/:id/edit',
     loadComponent: () => import('./pages/category-edit/category-edit').then(m => m.CategoryEditPage),
     canActivate: [authGuard],
