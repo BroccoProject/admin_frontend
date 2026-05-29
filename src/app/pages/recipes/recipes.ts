@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RecipeService } from '../../services/recipe.service';
 import { Recipe, RecipeDeletePreview } from '../../models/recipe.model';
-import { PaginationComponent } from '../../components/pagination/pagination.component';
 import { DeleteModalComponent } from '../../components/delete-modal/delete-modal.component';
 import { ToastService } from '../../services/toast.service';
 import { HasRoleDirective } from '../../directives/has-role.directive';
@@ -12,7 +11,7 @@ import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.direc
 
 @Component({
   selector: 'app-recipes',
-  imports: [CommonModule, FormsModule, PaginationComponent, DeleteModalComponent, HasRoleDirective],
+  imports: [CommonModule, FormsModule, DeleteModalComponent, HasRoleDirective],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
@@ -24,12 +23,20 @@ export class RecipesPage implements OnInit {
   recipes = signal<Recipe[]>([]);
   total = signal(0);
   page = signal(1);
-  pageSize = signal(10);
+  pageSize = signal(25);
   totalPages = signal(1);
   searchQuery = signal('');
   sortBy = signal('title');
   sortOrder = signal<'asc' | 'desc'>('asc');
+  filterCategory = signal('');
+  filterDifficulty = signal('');
+  filterTag = signal('');
+  showFiltersPanel = signal(false);
   loading = signal(false);
+
+  availableDifficulties = ['Beginner', 'Intermediate', 'Master Chef'];
+  availableCategories = ['Dessert', 'Beef', 'Pork', 'Chicken', 'Vegetarian', 'Seafood', 'Pasta', 'Breakfast'];
+  availableTags = ['Pudding', 'Tart', 'Baking', 'Fruity', 'Sweet', 'Savory', 'Quick', 'Healthy', 'Spicy'];
 
   showDeleteModal = signal(false);
   recipeToDelete = signal<Recipe | null>(null);
@@ -60,6 +67,9 @@ export class RecipesPage implements OnInit {
         search: this.searchQuery() || undefined,
         sort_by: this.sortBy(),
         sort_order: this.sortOrder(),
+        category: this.filterCategory() || undefined,
+        difficulty: this.filterDifficulty() || undefined,
+        tag: this.filterTag() || undefined,
       })
       .subscribe({
         next: (res) => {
@@ -75,7 +85,50 @@ export class RecipesPage implements OnInit {
       });
   }
 
+  loadMoreRecipes(): void {
+    this.loading.set(true);
+    this.recipeService
+      .getRecipes({
+        page: this.page(),
+        page_size: this.pageSize(),
+        search: this.searchQuery() || undefined,
+        sort_by: this.sortBy(),
+        sort_order: this.sortOrder(),
+        category: this.filterCategory() || undefined,
+        difficulty: this.filterDifficulty() || undefined,
+        tag: this.filterTag() || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          this.recipes.update(existing => [...existing, ...res.items]);
+          this.total.set(res.total);
+          this.totalPages.set(res.total_pages);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.toastService.show('Failed to load recipes', 'error');
+        },
+      });
+  }
+
+  onScroll(event: Event): void {
+    const tracker = event.target as HTMLElement;
+    const limit = tracker.scrollHeight - tracker.clientHeight;
+    if (tracker.scrollTop >= limit - 100) {
+      if (!this.loading() && this.page() < this.totalPages()) {
+        this.page.update(p => p + 1);
+        this.loadMoreRecipes();
+      }
+    }
+  }
+
   onSearch(): void {
+    this.page.set(1);
+    this.loadRecipes();
+  }
+
+  onFilterChange(): void {
     this.page.set(1);
     this.loadRecipes();
   }
@@ -84,6 +137,46 @@ export class RecipesPage implements OnInit {
     this.sortBy.set(field);
     this.page.set(1);
     this.loadRecipes();
+  }
+
+  toggleSortOrder(): void {
+    this.sortOrder.update(order => order === 'asc' ? 'desc' : 'asc');
+    this.page.set(1);
+    this.loadRecipes();
+  }
+
+  toggleFiltersPanel(): void {
+    this.showFiltersPanel.update(v => !v);
+  }
+
+  closeFiltersPanel(): void {
+    this.showFiltersPanel.set(false);
+  }
+
+  selectDifficulty(diff: string): void {
+    this.filterDifficulty.set(this.filterDifficulty() === diff ? '' : diff);
+    this.onFilterChange();
+  }
+
+  selectCategory(cat: string): void {
+    this.filterCategory.set(this.filterCategory() === cat ? '' : cat);
+    this.onFilterChange();
+  }
+
+  selectTag(tag: string): void {
+    this.filterTag.set(this.filterTag() === tag ? '' : tag);
+    this.onFilterChange();
+  }
+
+  clearFilters(): void {
+    this.filterDifficulty.set('');
+    this.filterCategory.set('');
+    this.filterTag.set('');
+    this.onFilterChange();
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.filterDifficulty() || this.filterCategory() || this.filterTag());
   }
 
   onEditRecipe(recipe: Recipe): void {

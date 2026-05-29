@@ -121,7 +121,6 @@
 .data-table tbody tr {
   transition: background var(--t-fast);
   &:hover { background: var(--c-grey-bg); }
-  &:last-child td { border-bottom: none; }
 }
 
 .cell-title   { font-weight: 600; color: var(--c-txt); }

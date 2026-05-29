@@ -16,6 +16,9 @@ export class RecipeService {
     search?: string;
     sort_by?: string;
     sort_order?: string;
+    category?: string;
+    difficulty?: string;
+    tag?: string;
   }): Observable<RecipeListResponse> {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
@@ -23,6 +26,9 @@ export class RecipeService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.sort_by) httpParams = httpParams.set('sort_by', params.sort_by);
     if (params.sort_order) httpParams = httpParams.set('sort_order', params.sort_order);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.difficulty) httpParams = httpParams.set('difficulty', params.difficulty);
+    if (params.tag) httpParams = httpParams.set('tag', params.tag);
     return this.http.get<RecipeListResponse>(this.baseUrl, { params: httpParams });
   }
 
