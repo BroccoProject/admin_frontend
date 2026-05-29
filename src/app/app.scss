@@ -2,38 +2,47 @@
   display: flex;
   height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 216px;
-  min-width: 216px;
-  background: #111111;
+  width: 240px;
+  min-width: 240px;
+  background: #ffffff; /* White background */
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 100;
-  border-right: 1px solid #1f1f1f;
+  border-right: 1px solid #dee2e6; /* Light gray border */
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0;
+
+  &.hidden {
+    transform: translateX(-100%);
+    margin-left: -240px;
+  }
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 20px 18px 16px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid #dee2e6;
 }
 
 .brand-text {
   font-size: 14px;
   font-weight: 700;
-  color: rgba(255,255,255,.9);
+  color: #212529; /* Dark brand text color */
   letter-spacing: .1px;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 8px;
+  gap: 4px;
+  padding: 16px 12px;
   flex: 1;
 }
 
@@ -41,31 +50,84 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 500;
-  color: rgba(255,255,255,.45);
-  transition: background var(--t-fast), color var(--t-fast);
+  color: #495057; /* Light mode text color */
+  transition: all 0.15s ease;
   position: relative;
 
-  svg { flex-shrink: 0; }
+  svg {
+    flex-shrink: 0;
+    color: #868e96; /* Light mode icon color */
+    transition: color 0.15s ease;
+  }
 
   &:hover {
-    background: rgba(255,255,255,.06);
-    color: rgba(255,255,255,.8);
+    background: rgba(255, 109, 0, 0.08); /* brand orange hover */
+    color: #ff6d00;
+
+    svg { color: #ff6d00; }
   }
 
   &.active {
-    background: rgba(255,255,255,.1);
-    color: #fff;
+    background: #fff3e0; /* active brand layout matching active filters */
+    color: #ff6d00;
     font-weight: 600;
+
+    svg { color: #ff6d00; }
   }
 
   &--profile {
-    border-top: 1px solid rgba(255,255,255,.06);
+    border-top: 1px solid #dee2e6;
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 14px;
+  }
+}
+
+/* Toggle Buttons styling */
+.btn-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 50%;
+  color: #495057;
+  transition: all 0.15s ease;
+  z-index: 1010;
+
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    color: #ff6d00;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+}
+
+.btn-floating {
+  position: fixed;
+  left: 12px;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-color: #dee2e6;
+}
+
+.btn-close {
+  width: 26px;
+  height: 26px;
+  border-color: #dee2e6;
+  background: #ffffff;
+  color: #868e96;
+
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    color: #ff6d00;
   }
 }
 
@@ -74,6 +136,7 @@
   overflow-y: auto;
   background: var(--c-bg);
   min-width: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (max-width: 768px) {
@@ -88,13 +151,26 @@
     min-height: 52px;
     padding: 0 12px;
     border-right: none;
-    border-bottom: 1px solid #1f1f1f;
+    border-bottom: 1px solid #dee2e6;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+
+    &.hidden {
+      transform: translateY(-100%);
+      margin-left: 0;
+      margin-top: -52px;
+    }
   }
 
   .sidebar-brand {
     padding: 0;
     border: none;
     flex: 1;
+  }
+
+  .btn-close {
+    display: none; /* Mobile navigation toggle handles this differently */
   }
 
   .sidebar-nav {
@@ -110,5 +186,12 @@
     &--profile { margin-top: 0; padding-top: 7px; border-top: none; margin-left: auto; }
   }
 
-  .main-content { overflow-y: auto; height: calc(100vh - 52px); }
+  .btn-floating {
+    top: 8px;
+    left: 8px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .main-content { overflow-y: auto; height: 100vh; }
 }

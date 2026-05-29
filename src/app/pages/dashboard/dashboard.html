@@ -3,6 +3,13 @@
 } @else {
 <div class="dash-root page-enter">
 
+  <div class="dash-info">
+    <div class="info-icon">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <span class="info-text">Changes made here are reflected immediately in the mobile app. Use the sidebar to navigate.</span>
+  </div>
+
   <div class="dash-greeting">
     @if (currentUser(); as user) {
       <div class="greeting-text">
@@ -14,45 +21,32 @@
   </div>
 
   <div class="dash-stats">
-    <a routerLink="/recipes" class="stat-card stat-card--neutral">
+    <a routerLink="/recipes" class="stat-card">
       <div class="stat-icon">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       </div>
-      <div class="stat-body">
-        <span class="stat-label">Recipes</span>
-        <span class="stat-cta">Browse</span>
-      </div>
+      <span class="stat-label">Recipes</span>
+      <p class="stat-desc">Manage and catalog all recipes in the application. Browse, search, filter, edit, or delete existing recipes. You can also run the agent-based recipe parser to automatically import and parse recipe data from external URLs.</p>
+      <span class="stat-cta">Browse Recipes &rarr;</span>
     </a>
 
-    <a routerLink="/categories" class="stat-card stat-card--neutral">
+    <a routerLink="/categories" class="stat-card">
       <div class="stat-icon">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       </div>
-      <div class="stat-body">
-        <span class="stat-label">Categories</span>
-        <span class="stat-cta">Browse</span>
-      </div>
+      <span class="stat-label">Categories</span>
+      <p class="stat-desc">Organize your recipe collection into structural categories. Configure unlock costs in stars, manage descriptions, define category areas and types, and track the total number of roadmap nodes associated with each category.</p>
+      <span class="stat-cta">Browse Categories &rarr;</span>
     </a>
 
-    <a routerLink="/access-requests" class="stat-card stat-card--neutral">
+    <a routerLink="/access-requests" class="stat-card">
       <div class="stat-icon">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <div class="stat-body">
-        <span class="stat-label">Access &amp; Team</span>
-        <span class="stat-cta">Manage</span>
-      </div>
+      <span class="stat-label">Access &amp; Team</span>
+      <p class="stat-desc">Control user registrations and permissions. Review pending system access requests from viewers, promote or demote roles for admins and editors, and revoke active team member access instantly.</p>
+      <span class="stat-cta">Manage Team &rarr;</span>
     </a>
-  </div>
-
-  <div class="dash-info">
-    <div class="info-icon">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </div>
-    <div>
-      <p class="info-title">Brocco Admin Panel</p>
-      <p class="info-body">Use the sidebar to navigate. Changes made here are reflected immediately in the mobile app.</p>
-    </div>
   </div>
 
 </div>
