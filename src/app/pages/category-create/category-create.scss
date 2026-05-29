@@ -365,26 +365,6 @@
   border-top-color: #ff6d00;
 }
 
-.spinner-large {
-  width: 32px;
-  height: 32px;
-  border-width: 3px;
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-// ── Fullscreen Loading ──
-.loading-overlay-full {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  height: 100%;
-  background: #f9fafb;
-  color: #4b5563;
-  font-size: 15px;
-  font-weight: 500;
 }

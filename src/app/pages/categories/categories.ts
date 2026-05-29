@@ -53,6 +53,10 @@ export class CategoriesPage implements OnInit {
     this.loadCategories();
   }
 
+  onCreateCategory(): void {
+    this.router.navigate(['/categories/create']);
+  }
+
   loadCategories(): void {
     this.loading.set(true);
     this.categoryService

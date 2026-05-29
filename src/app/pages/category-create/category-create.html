@@ -1,0 +1,166 @@
+<div class="header-bar">
+  <button class="btn-back" (click)="cancel()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </button>
+  <div class="title-container">
+    <h1 class="page-title">{{ formData().title || 'New Category' }}</h1>
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-edit-icon"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+  </div>
+  <button class="btn-primary" (click)="saveCategory()" [disabled]="isSubmitting()">
+    @if (isSubmitting()) {
+      <div class="spinner-small"></div>
+      Saving...
+    } @else {
+      Publish Map
+    }
+  </button>
+</div>
+
+<div class="workspace">
+  <!-- Left Panel: Recipes -->
+  <div class="panel-left">
+    <div class="panel-header">
+      <h3 class="panel-title">Available Recipes</h3>
+      <div class="search-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input 
+          type="text" 
+          placeholder="Search recipes..." 
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+    </div>
+    
+    <div class="recipes-list" (scroll)="onRecipeScroll($event)">
+      @for (recipe of recipes(); track recipe.id) {
+        <div 
+          class="recipe-card"
+          draggable="true"
+          (dragstart)="onDragStartRecipe($event, recipe)"
+        >
+          <div class="card-drag-handle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+          </div>
+          <div class="card-content">
+            <h4 class="card-title">{{ recipe.title }}</h4>
+            <div class="card-meta">
+              @if (recipe.difficulty_level) {
+                <span class="badge" [ngClass]="{
+                  'badge-easy': recipe.difficulty_level.toLowerCase() === 'beginner',
+                  'badge-medium': recipe.difficulty_level.toLowerCase() === 'intermediate',
+                  'badge-hard': recipe.difficulty_level.toLowerCase() === 'master chef'
+                }">{{ recipe.difficulty_level }}</span>
+              }
+              @if (recipe.area) {
+                <span class="meta-text">{{ recipe.area }}</span>
+              }
+              @if (recipe.duration_minutes) {
+                <span class="meta-text">• {{ recipe.duration_minutes }} min</span>
+              }
+            </div>
+          </div>
+          <button class="btn-open-new" title="View recipe details" (click)="openRecipeDetail(recipe.id)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+        </div>
+      }
+      
+      @if (loadingRecipes()) {
+        <div class="loading-state">
+          <div class="spinner-dark spinner-small"></div>
+          <span>Loading...</span>
+        </div>
+      } @else if (recipes().length === 0) {
+        <div class="empty-state">
+          No recipes found.
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Center Panel: Canvas Graph -->
+  <div class="panel-center">
+    <canvas 
+      #graphCanvas 
+      class="graph-canvas"
+      (mousedown)="onCanvasMouseDown($event)"
+      (mousemove)="onCanvasMouseMove($event)"
+      (mouseup)="onCanvasMouseUp($event)"
+      (dragover)="onCanvasDragOver($event)"
+      (drop)="onCanvasDrop($event)"
+      tabindex="0"
+    ></canvas>
+    <div class="canvas-instructions">
+      Drag recipes from the left panel onto the canvas.<br>
+      Click and drag between green ports to connect nodes.<br>
+      Select a node and press Delete to remove it.<br>
+      Middle-click or Shift+Click to pan the canvas.
+    </div>
+  </div>
+
+  <!-- Right Panel: Category Form -->
+  <div class="panel-right">
+    <h3 class="panel-title">Category Settings</h3>
+    
+    <div class="form-group">
+      <label>Category Name <span class="required">*</span></label>
+      <input 
+        type="text" 
+        class="form-control" 
+        [ngModel]="formData().title" 
+        (ngModelChange)="formData.set({ ...formData(), title: $event })"
+        placeholder="e.g., Italian Cuisine Mastery"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Stars Cost</label>
+      <input 
+        type="number" 
+        class="form-control" 
+        [ngModel]="formData().unlock_cost_stars" 
+        (ngModelChange)="formData.set({ ...formData(), unlock_cost_stars: $event })"
+        placeholder="0"
+        min="0"
+      />
+      <div class="help-text">Number of stars required to unlock this category.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Area</label>
+      <div class="select-wrapper">
+        <select 
+          class="form-control" 
+          [ngModel]="formData().category_area" 
+          (ngModelChange)="formData.set({ ...formData(), category_area: $event })"
+        >
+          <option value="">Select Area</option>
+          @for (area of availableAreas; track area) {
+            <option [value]="area">{{ area }}</option>
+          }
+        </select>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="select-icon"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Type</label>
+      <div class="select-wrapper">
+        <select 
+          class="form-control" 
+          [ngModel]="formData().category_type" 
+          (ngModelChange)="formData.set({ ...formData(), category_type: $event })"
+        >
+          <option value="">Select Type</option>
+          @for (type of availableTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="select-icon"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+</div>

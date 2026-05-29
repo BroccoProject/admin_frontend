@@ -11,8 +11,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
 import { CategoryService } from '../../services/category.service';
 import { RecipeService } from '../../services/recipe.service';
 import { ToastService } from '../../services/toast.service';
@@ -20,7 +19,7 @@ import { Recipe } from '../../models/recipe.model';
 import { CategoryCreatePayload, CategoryNodePayload } from '../../models/category.model';
 
 interface GraphNode {
-  id: string; // internal UUID/database UUID for graph tracking
+  id: string; // internal UUID for graph tracking
   recipe_id: string | null;
   title: string;
   x: number;
@@ -36,33 +35,22 @@ interface GraphEdge {
 }
 
 @Component({
-  selector: 'app-category-edit',
+  selector: 'app-category-create',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './category-edit.html',
-  styleUrl: './category-edit.scss',
+  templateUrl: './category-create.html',
+  styleUrl: './category-create.scss',
 })
-export class CategoryEditPage implements OnInit, OnDestroy {
-  private readonly route = inject(ActivatedRoute);
+export class CategoryCreatePage implements OnInit, OnDestroy {
   private readonly categoryService = inject(CategoryService);
   private readonly recipeService = inject(RecipeService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
 
-  @ViewChild('graphCanvas') set canvas(content: ElementRef<HTMLCanvasElement>) {
-    if (content) {
-      this.canvasRef = content;
-      this.initCanvas();
-    }
-  }
-  canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('graphCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   // Form State
-  id = signal<string>('');
-  loading = signal(true);
-  isSubmitting = signal(false);
-
   formData = signal<{
     title: string;
     unlock_cost_stars: number;
@@ -92,6 +80,7 @@ export class CategoryEditPage implements OnInit, OnDestroy {
   pageSize = signal(20);
   totalPages = signal(1);
   loadingRecipes = signal(false);
+  isSubmitting = signal(false);
 
   // Graph State
   private ctx!: CanvasRenderingContext2D;
@@ -125,80 +114,14 @@ export class CategoryEditPage implements OnInit, OnDestroy {
   private readonly GRID_OFFSET_Y = 100;
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.id.set(id);
-      this.loadAllData(id);
-    } else {
-      this.toastService.show('Category ID not found', 'error');
-      this.router.navigate(['/categories']);
-    }
+    this.loadRecipes();
+    this.initCanvas();
   }
 
   ngOnDestroy(): void {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
-  }
-
-  // --- Load All Data ---
-
-  loadAllData(id: string): void {
-    this.loading.set(true);
-    forkJoin({
-      category: this.categoryService.getCategoryById(id),
-      nodes: this.categoryService.getCategoryNodes(id),
-      recipes: this.recipeService.getRecipes({
-        page: this.page(),
-        page_size: this.pageSize(),
-      })
-    }).subscribe({
-      next: (res) => {
-        // 1. Populate category settings
-        this.formData.set({
-          title: res.category.title || '',
-          unlock_cost_stars: res.category.unlock_cost_stars ?? 0,
-          category_area: res.category.category_area || '',
-          category_type: res.category.category_type || '',
-        });
-
-        // 2. Populate recipes browser
-        this.recipes.set(res.recipes.items);
-        this.totalPages.set(res.recipes.total_pages);
-
-        // 3. Populate canvas graph
-        this.nodes = res.nodes.map(node => {
-          const canvasX = node.x < 50 ? (node.x * this.GRID_CELL_WIDTH + this.GRID_OFFSET_X) : node.x;
-          const canvasY = node.y < 50 ? (node.y * this.GRID_CELL_HEIGHT + this.GRID_OFFSET_Y) : node.y;
-          return {
-            id: node.id,
-            recipe_id: node.recipe_id,
-            title: node.title,
-            x: canvasX,
-            y: canvasY,
-            width: this.NODE_WIDTH,
-            height: this.NODE_HEIGHT,
-          };
-        });
-
-        const loadedEdges: GraphEdge[] = [];
-        res.nodes.forEach(node => {
-          (node.prerequisite_ids || []).forEach(prereqId => {
-            loadedEdges.push({
-              fromNodeId: prereqId,
-              toNodeId: node.id
-            });
-          });
-        });
-        this.edges = loadedEdges;
-
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.toastService.show('Failed to load category details', 'error');
-        this.router.navigate(['/categories']);
-      }
-    });
   }
 
   // --- Recipe List Loading ---
@@ -302,7 +225,6 @@ export class CategoryEditPage implements OnInit, OnDestroy {
   // --- Canvas & Graph Logic ---
 
   private initCanvas(): void {
-    if (!this.canvasRef) return;
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
     this.resizeCanvas();
@@ -319,7 +241,6 @@ export class CategoryEditPage implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   resizeCanvas(): void {
-    if (!this.canvasRef) return;
     const canvas = this.canvasRef.nativeElement;
     const parent = canvas.parentElement;
     if (parent) {
@@ -464,7 +385,7 @@ export class CategoryEditPage implements OnInit, OnDestroy {
   }
 
   private drawGraph(): void {
-    if (!this.ctx || !this.canvasRef) return;
+    if (!this.ctx) return;
     const canvas = this.canvasRef.nativeElement;
     
     // Clear canvas
@@ -620,14 +541,14 @@ export class CategoryEditPage implements OnInit, OnDestroy {
       nodes: this.serializeGraph()
     };
 
-    this.categoryService.updateCategory(this.id(), payload).subscribe({
+    this.categoryService.createCategory(payload).subscribe({
       next: () => {
-        this.toastService.show('Category updated successfully', 'success');
+        this.toastService.show('Category created successfully', 'success');
         this.router.navigate(['/categories']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.toastService.show(err?.error?.detail || 'Failed to update category', 'error');
+        this.toastService.show(err?.error?.detail || 'Failed to create category', 'error');
       }
     });
   }

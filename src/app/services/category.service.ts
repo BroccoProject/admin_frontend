@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Category, CategoryListResponse, CategoryDeletePreview } from '../models/category.model';
+import { Category, CategoryListResponse, CategoryDeletePreview, CategoryCreatePayload, CategoryNodeResponse } from '../models/category.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -38,7 +38,15 @@ export class CategoryService {
     return this.http.get<Category>(`${this.baseUrl}/${id}`);
   }
 
-  updateCategory(id: string, data: { title?: string; description?: string }): Observable<Category> {
+  getCategoryNodes(id: string): Observable<CategoryNodeResponse[]> {
+    return this.http.get<CategoryNodeResponse[]>(`${this.baseUrl}/${id}/nodes`);
+  }
+
+  createCategory(payload: CategoryCreatePayload): Observable<Category> {
+    return this.http.post<Category>(this.baseUrl, payload);
+  }
+
+  updateCategory(id: string, data: CategoryCreatePayload): Observable<Category> {
     return this.http.patch<Category>(`${this.baseUrl}/${id}`, data);
   }
 
