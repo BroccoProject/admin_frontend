@@ -14,13 +14,16 @@
     <div class="filter-group">
       <label>Sort by:</label>
       <div class="sort-by-wrapper">
-        <select [ngModel]="sortBy()" (ngModelChange)="onSortChange($event)" id="sort-by-select">
-          <option value="title">Title</option>
-          <option value="difficulty_level">Difficulty</option>
-          <option value="duration_minutes">Duration</option>
-          <option value="category">Category</option>
-          <option value="area">Area</option>
-        </select>
+        <div class="select-left-arrow-container">
+          <svg class="select-left-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <select [ngModel]="sortBy()" (ngModelChange)="onSortChange($event)" id="sort-by-select">
+            <option value="title">Title</option>
+            <option value="difficulty_level">Difficulty</option>
+            <option value="duration_minutes">Duration</option>
+            <option value="category">Category</option>
+            <option value="area">Area</option>
+          </select>
+        </div>
         <button class="btn-sort-direction" (click)="toggleSortOrder()" title="Toggle Sort Order">
           @if (sortOrder() === 'asc') {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>

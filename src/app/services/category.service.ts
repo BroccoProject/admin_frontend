@@ -15,6 +15,8 @@ export class CategoryService {
     search?: string;
     sort_by?: string;
     sort_order?: string;
+    category_area?: string;
+    category_type?: string;
   }): Observable<CategoryListResponse> {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
@@ -22,6 +24,8 @@ export class CategoryService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.sort_by) httpParams = httpParams.set('sort_by', params.sort_by);
     if (params.sort_order) httpParams = httpParams.set('sort_order', params.sort_order);
+    if (params.category_area) httpParams = httpParams.set('category_area', params.category_area);
+    if (params.category_type) httpParams = httpParams.set('category_type', params.category_type);
 
     return this.http.get<CategoryListResponse>(this.baseUrl, { params: httpParams });
   }
