@@ -40,7 +40,30 @@ export class AuthService {
   }
 
   login(): void {
+    this.loginWithGoogle();
+  }
+
+  loginWithGoogle(): void {
     window.location.href = `${this.apiUrl}/auth/google`;
+  }
+
+  loginWithGithub(): void {
+    window.location.href = `${this.apiUrl}/auth/github`;
+  }
+
+  async loginWithCredentials(email: string, password: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${this.apiUrl}/auth/login`, { email, password }, { withCredentials: true })
+    );
+    await this.loadUser();
+    this.router.navigate(['/dashboard']);
+  }
+
+  async register(email: string, password: string): Promise<string> {
+    const response = await firstValueFrom(
+      this.http.post<{ detail: string }>(`${this.apiUrl}/auth/register`, { email, password })
+    );
+    return response.detail;
   }
 
   async logout(): Promise<void> {
