@@ -40,10 +40,6 @@ export class RecipeService {
     return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
   }
 
-  getRecipeById(id: string): Observable<Recipe> {
-    return this.http.get<Recipe>(`${this.baseUrl}/${id}`);
-  }
-
   getRecipeDetail(id: string): Observable<RecipeDetail> {
     return this.http.get<RecipeDetail>(`${this.baseUrl}/${id}/detail`);
   }

@@ -1,6 +1,6 @@
 :host {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
 }
@@ -136,6 +136,7 @@
   overflow-y: auto;
   background: var(--c-bg);
   min-width: 0;
+  min-height: 0;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -145,11 +146,11 @@
   .sidebar {
     width: 100%;
     min-width: unset;
-    flex-direction: row;
-    align-items: center;
-    height: 52px;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
     min-height: 52px;
-    padding: 0 12px;
+    padding: 0;
     border-right: none;
     border-bottom: 1px solid #dee2e6;
     border-top-right-radius: 0;
@@ -164,26 +165,46 @@
   }
 
   .sidebar-brand {
-    padding: 0;
+    padding: 0 12px;
     border: none;
-    flex: 1;
+    flex: unset;
+    height: 52px;
   }
 
   .btn-close {
     display: none; /* Mobile navigation toggle handles this differently */
   }
 
+  .btn-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #495057;
+    padding: 8px;
+    cursor: pointer;
+  }
+
   .sidebar-nav {
-    flex-direction: row;
+    flex-direction: column;
     gap: 2px;
-    padding: 0;
+    padding: 0 12px 12px;
     flex: unset;
+    overflow-x: hidden;
+    display: none;
+
+    &.mobile-expanded {
+      display: flex;
+    }
   }
 
   .nav-item {
-    padding: 7px 10px;
-    span { display: none; }
-    &--profile { margin-top: 0; padding-top: 7px; border-top: none; margin-left: auto; }
+    padding: 10px 14px;
+    min-height: 40px;
+
+    span { display: inline; font-size: 13.5px; white-space: nowrap; }
+    &--profile { margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6; margin-left: 0; }
   }
 
   .btn-floating {
@@ -193,5 +214,5 @@
     height: 32px;
   }
 
-  .main-content { overflow-y: auto; height: 100vh; }
+  .main-content { overflow-y: auto; flex: 1; height: auto; }
 }

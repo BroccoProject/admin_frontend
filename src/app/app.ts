@@ -13,8 +13,17 @@ import { CommonModule } from '@angular/common';
 export class App {
   protected readonly authService = inject(AuthService);
   sidebarVisible = signal(true);
+  mobileMenuOpen = signal(false);
 
   toggleSidebar(): void {
     this.sidebarVisible.update(v => !v);
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
   }
 }

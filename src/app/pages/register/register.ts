@@ -47,7 +47,13 @@ export class RegisterPage {
       this.loading.set(false);
     }
   }
+  loginWithGoogle() {
+    this.authService.loginWithGoogle();
+  }
 
+  loginWithGithub() {
+    this.authService.loginWithGithub();
+  }
   goToLogin() {
     this.router.navigate(['/login']);
   }

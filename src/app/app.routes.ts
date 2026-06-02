@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -58,7 +59,7 @@ export const routes: Routes = [
   {
     path: 'access-requests',
     loadComponent: () => import('./pages/access-requests/access-requests').then(m => m.AccessRequestsPage),
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard],
   },
   {
     path: 'profile',

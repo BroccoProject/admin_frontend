@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -15,6 +16,7 @@ import {
   ItemRef,
   RecipeFullUpdate,
 } from '../../models/recipe.model';
+import { RECIPE_TAGS, RECIPE_STEP_ACTIONS } from '../../constants';
 
 @Component({
   selector: 'app-recipe-edit',
@@ -28,6 +30,7 @@ export class RecipeEditPage implements OnInit {
   private readonly router = inject(Router);
   private readonly recipeService = inject(RecipeService);
   private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   id = signal<string>('');
   loading = signal(true);
@@ -48,14 +51,8 @@ export class RecipeEditPage implements OnInit {
   ingredientCount = computed(() => this.recipe()?.ingredients?.length ?? 0);
   stepCount = computed(() => this.recipe()?.steps?.length ?? 0);
 
-  // Available tag options
-  readonly availableTags = [
-    'breakfast', 'lunch', 'dinner', 'dessert', 'snack',
-    'vegan', 'vegetarian', 'gluten-free', 'quick', 'healthy',
-    'comfort-food', 'soup', 'salad', 'pasta', 'baking',
-  ];
-
-  readonly availableActions = ['add', 'blend', 'chop', 'grate', 'melt', 'mince', 'peel', 'slice'];
+  readonly availableTags = RECIPE_TAGS;
+  readonly availableActions = RECIPE_STEP_ACTIONS;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -67,26 +64,35 @@ export class RecipeEditPage implements OnInit {
   }
 
   loadRecipeDetail(id: string): void {
-    this.recipeService.getRecipeDetail(id).subscribe({
-      next: (detail) => {
-        this.recipe.set(structuredClone(detail));
-        this.tagsString.set((detail.tags || []).join(', '));
-        this.loading.set(false);
-      },
-      error: () => {
-        this.toastService.show('Failed to load recipe', 'error');
-        this.router.navigate(['/recipes']);
-      },
-    });
+    this.recipeService.getRecipeDetail(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => {
+          this.recipe.set(structuredClone(detail));
+          this.tagsString.set((detail.tags || []).join(', '));
+          this.loading.set(false);
+        },
+        error: () => {
+          this.toastService.show('Failed to load recipe', 'error');
+          this.router.navigate(['/recipes']);
+        },
+      });
   }
 
   loadReferenceData(): void {
-    this.recipeService.getAllIngredients().subscribe({
-      next: (res) => this.allIngredients.set(res.items),
-    });
-    this.recipeService.getAllItems().subscribe({
-      next: (res) => this.allItems.set(res.items),
-    });
+    this.recipeService.getAllIngredients()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => this.allIngredients.set(res.items),
+        error: () => this.toastService.show('Failed to load ingredients list', 'error'),
+      });
+
+    this.recipeService.getAllItems()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => this.allItems.set(res.items),
+        error: () => this.toastService.show('Failed to load items list', 'error'),
+      });
   }
 
   setTab(tab: 'general' | 'ingredients' | 'steps'): void {
@@ -95,11 +101,10 @@ export class RecipeEditPage implements OnInit {
 
   // ── General info helpers ──
 
-  updateField(field: string, value: any): void {
+  updateField<K extends keyof RecipeDetail>(field: K, value: RecipeDetail[K]): void {
     const r = this.recipe();
     if (!r) return;
-    (r as any)[field] = value;
-    this.recipe.set({ ...r });
+    this.recipe.set({ ...r, [field]: value });
   }
 
   hasTag(tag: string): boolean {
@@ -310,17 +315,19 @@ export class RecipeEditPage implements OnInit {
     };
 
     this.saving.set(true);
-    this.recipeService.updateRecipeFull(this.id(), payload).subscribe({
-      next: (detail) => {
-        this.recipe.set(structuredClone(detail));
-        this.saving.set(false);
-        this.toastService.show('Recipe updated successfully', 'success');
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.toastService.show(err?.error?.detail || 'Failed to update recipe', 'error');
-      },
-    });
+    this.recipeService.updateRecipeFull(this.id(), payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => {
+          this.recipe.set(structuredClone(detail));
+          this.saving.set(false);
+          this.toastService.show('Recipe updated successfully', 'success');
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.toastService.show(err?.error?.detail || 'Failed to update recipe', 'error');
+        },
+      });
   }
 
   cancel(): void {

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthUser } from '../models/auth.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
   readonly isViewer = computed(() => this.user()?.role === 'viewer');
   readonly loading = this._loading.asReadonly();
 
-  private readonly apiUrl = 'http://localhost:8000/api/v1';
+  private readonly apiUrl = environment.apiUrl;
 
   async loadUser(): Promise<AuthUser | null> {
     this._loading.set(true);

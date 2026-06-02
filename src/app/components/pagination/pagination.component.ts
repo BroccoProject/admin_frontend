@@ -49,6 +49,13 @@ import { CommonModule } from '@angular/common';
       cursor: not-allowed;
       background-color: #f8f9fa;
     }
+    @media (max-width: 600px) {
+      .pagination-container {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
   `]
 })
 export class PaginationComponent {

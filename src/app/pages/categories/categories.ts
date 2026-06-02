@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryService } from '../../services/category.service';
@@ -6,8 +7,8 @@ import { Category, CategoryDeletePreview } from '../../models/category.model';
 import { DeleteModalComponent } from '../../components/delete-modal/delete-modal.component';
 import { ToastService } from '../../services/toast.service';
 import { HasRoleDirective } from '../../directives/has-role.directive';
-import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.directive';
 import { Router } from '@angular/router';
+import { CATEGORY_AREAS, CATEGORY_TYPES } from '../../constants';
 
 @Component({
   selector: 'app-categories',
@@ -19,6 +20,7 @@ export class CategoriesPage implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   categories = signal<Category[]>([]);
   total = signal(0);
@@ -33,15 +35,8 @@ export class CategoriesPage implements OnInit {
   showFiltersPanel = signal(false);
   loading = signal(false);
 
-  availableAreas = [
-    'Algerian', 'American', 'Argentinian', 'Australian', 'British', 'Canadian', 
-    'Chinese', 'Croatian', 'Dutch', 'Egyptian', 'Filipino', 'French', 'Greek', 
-    'Indian', 'Irish', 'Italian', 'Jamaican', 'Japanese', 'Kenyan', 'Malaysian', 
-    'Mexican', 'Moroccan', 'Norwegian', 'Polish', 'Portuguese', 'Russian', 
-    'Saudi Arabian', 'Spanish', 'Syrian', 'Thai', 'Tunisian', 'Turkish', 
-    'Ukrainian', 'Uruguayan', 'Venezulan', 'Vietnamese'
-  ];
-  availableTypes = ['*', 'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pork', 'Seafood', 'Side', 'Vegetarian'];
+  availableAreas = [...CATEGORY_AREAS];
+  availableTypes = [...CATEGORY_TYPES];
 
   showDeleteModal = signal(false);
   categoryToDelete = signal<Category | null>(null);
@@ -185,15 +180,18 @@ export class CategoriesPage implements OnInit {
     this.previewLoading.set(true);
     this.showDeleteModal.set(true);
 
-    this.categoryService.getDeletePreview(category.id).subscribe({
-      next: (preview) => {
-        this.deletePreview.set(preview);
-        this.previewLoading.set(false);
-      },
-      error: () => {
-        this.previewLoading.set(false);
-      },
-    });
+    this.categoryService.getDeletePreview(category.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (preview) => {
+          this.deletePreview.set(preview);
+          this.previewLoading.set(false);
+        },
+        error: () => {
+          this.previewLoading.set(false);
+          this.toastService.show('Failed to load delete preview', 'error');
+        },
+      });
   }
 
   cancelDelete(): void {

@@ -51,27 +51,33 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
             </div>
             <div class="card-content">
-              <h4 class="card-title">{{ recipe.title }}</h4>
-              <div class="card-meta">
-                @if (recipe.difficulty_level) {
-                  <span class="badge" [ngClass]="{
-                    'badge-easy': recipe.difficulty_level.toLowerCase() === 'beginner',
-                    'badge-medium': recipe.difficulty_level.toLowerCase() === 'intermediate',
-                    'badge-hard': recipe.difficulty_level.toLowerCase() === 'master chef'
-                  }">{{ recipe.difficulty_level }}</span>
-                }
-                @if (recipe.area) {
-                  <span class="meta-text">{{ recipe.area }}</span>
-                }
-                @if (recipe.duration_minutes) {
-                  <span class="meta-text">• {{ recipe.duration_minutes }} min</span>
-                }
-              </div>
+            <h4 class="card-title">{{ recipe.title }}</h4>
+            <div class="card-meta">
+              @if (recipe.difficulty_level) {
+                <span class="badge" [ngClass]="{
+                  'badge-easy': recipe.difficulty_level.toLowerCase() === 'beginner',
+                  'badge-medium': recipe.difficulty_level.toLowerCase() === 'intermediate',
+                  'badge-hard': recipe.difficulty_level.toLowerCase() === 'master chef'
+                }">{{ recipe.difficulty_level }}</span>
+              }
+              @if (recipe.area) {
+                <span class="meta-text">{{ recipe.area }}</span>
+              }
+              @if (recipe.duration_minutes) {
+                <span class="meta-text">• {{ recipe.duration_minutes }} min</span>
+              }
             </div>
+          </div>
+          <div class="card-actions">
             <button class="btn-open-new" title="View recipe details" (click)="openRecipeDetail(recipe.id)">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </button>
+            <button class="btn-add-canvas" title="Add to canvas" (click)="addRecipeToCanvas(recipe)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add</span>
+            </button>
           </div>
+        </div>
         }
         
         @if (loadingRecipes()) {
@@ -89,22 +95,7 @@
 
     <!-- Center Panel: Canvas Graph -->
     <div class="panel-center">
-      <canvas 
-        #graphCanvas 
-        class="graph-canvas"
-        (mousedown)="onCanvasMouseDown($event)"
-        (mousemove)="onCanvasMouseMove($event)"
-        (mouseup)="onCanvasMouseUp($event)"
-        (dragover)="onCanvasDragOver($event)"
-        (drop)="onCanvasDrop($event)"
-        tabindex="0"
-      ></canvas>
-      <div class="canvas-instructions">
-        Drag recipes from the left panel onto the canvas.<br>
-        Click and drag between green ports to connect nodes.<br>
-        Select a node and press Delete to remove it.<br>
-        Middle-click or Shift+Click to pan the canvas.
-      </div>
+      <app-graph-canvas [(nodes)]="nodes" [(edges)]="edges" />
     </div>
 
     <!-- Right Panel: Category Form -->

@@ -1,10 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ParserService } from '../../services/parser.service';
 import { RecipeService } from '../../services/recipe.service';
+import { ToastService } from '../../services/toast.service';
 import { RecipeDraft } from '../../models/parser.model';
+import { RECIPE_CATEGORIES, RECIPE_DIFFICULTIES, RECIPE_TAGS } from '../../constants';
 
 @Component({
   selector: 'app-recipe-create',
@@ -15,7 +18,9 @@ import { RecipeDraft } from '../../models/parser.model';
 export class RecipeCreatePage {
   private readonly parserService = inject(ParserService);
   private readonly recipeService = inject(RecipeService);
+  private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   rawText = signal('');
   feedbackText = signal('');
@@ -26,37 +31,9 @@ export class RecipeCreatePage {
   isSubmitting = signal(false);
   activeTab = signal<'general' | 'ingredients' | 'steps'>('general');
 
-  readonly categories = [
-    'Beef', 'Breakfast', 'Chicken', 'Dessert', 'Goat', 'Lamb',
-    'Miscellaneous', 'Pasta', 'Pork', 'Seafood', 'Side', 'Starter',
-    'Vegan', 'Vegetarian'
-  ];
-
-  readonly difficulties = [
-    { value: 'Beginner', label: 'Beginner' },
-    { value: 'Intermediate', label: 'Intermediate' },
-    { value: 'Master Chef', label: 'Master Chef' }
-  ];
-
-  readonly availableTags = [
-    'Alcoholic', 'Baking', 'BBQ', 'Beans', 'Breakfast', 'Brunch',
-    'Bun', 'Cake', 'Calorific', 'Caramel', 'Casserole', 'Celebration',
-    'Cheap', 'Cheasy', 'Cheesy', 'Chilli', 'Chocolate', 'Christmas',
-    'Curry', 'Dairy', 'DateNight', 'Desert', 'DinnerParty', 'Easter',
-    'Egg', 'Eid', 'Expensive', 'Fish', 'Fresh', 'Fruity', 'Fusion',
-    'Glazed', 'Greasy', 'Halloween', 'HangoverFood', 'Heavy', 'HighFat',
-    'Kebab', 'Keto', 'Light', 'LowCalorie', 'LowCarbs', 'MainMeal',
-    'Meat', 'Mild', 'Nutty', 'Onthego', 'Paella', 'Paleo', 'Pancake',
-    'Party', 'Pasta', 'Pie', 'Pudding', 'Pulse', 'Salad', 'Sandwich',
-    'Sausages', 'Savory', 'Seafood', 'Shellfish', 'SideDish', 'Snack',
-    'Soup', 'Sour', 'Speciality', 'Spicy', 'Stew', 'Streetfood',
-    'StrongFlavor', 'Summer', 'Sweet', 'Tart', 'Treat', 'UnHealthy',
-    'Vegan', 'Vegetables', 'Vegetarian'
-  ];
-
-  showToast = signal(false);
-  toastMessage = signal('');
-  toastType = signal<'success' | 'error'>('success');
+  readonly categories = RECIPE_CATEGORIES;
+  readonly difficulties = RECIPE_DIFFICULTIES;
+  readonly availableTags = RECIPE_TAGS;
 
   toggleTag(tag: string): void {
     const current = this.draft();
@@ -83,18 +60,17 @@ export class RecipeCreatePage {
       ? this.parserService.provideFeedback(this.threadId()!, textToProcess)
       : this.parserService.parseRecipe(textToProcess);
 
-    apiCall.subscribe({
+    apiCall.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.draft.set(res.draft);
         this.threadId.set(res.thread_id);
         this.feedbackText.set('');
         this.isProcessing.set(false);
-        this.showToastMessage('Recipe processed by AI successfully!', 'success');
+        this.toastService.show('Recipe processed by AI successfully!', 'success');
       },
       error: (err) => {
         this.isProcessing.set(false);
-        const errorDetail = err?.error?.detail || 'Failed to process recipe with AI.';
-        this.showToastMessage(errorDetail, 'error');
+        this.toastService.show(err?.error?.detail || 'Failed to process recipe with AI.', 'error');
       },
     });
   }
@@ -104,20 +80,21 @@ export class RecipeCreatePage {
     if (!currentDraft) return;
 
     this.isSubmitting.set(true);
-    this.recipeService.createRecipe(currentDraft).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.showToastMessage('Recipe saved successfully!', 'success');
-        setTimeout(() => {
-          this.router.navigate(['/recipes']);
-        }, 1500);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const errorDetail = err?.error?.detail || 'Failed to save recipe.';
-        this.showToastMessage(errorDetail, 'error');
-      },
-    });
+    this.recipeService.createRecipe(currentDraft)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.toastService.show('Recipe saved successfully!', 'success');
+          setTimeout(() => {
+            this.router.navigate(['/recipes']);
+          }, 1500);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          this.toastService.show(err?.error?.detail || 'Failed to save recipe.', 'error');
+        },
+      });
   }
 
   resetParser(): void {
@@ -193,12 +170,5 @@ export class RecipeCreatePage {
       }));
       this.draft.set(updated);
     }
-  }
-
-  private showToastMessage(message: string, type: 'success' | 'error'): void {
-    this.toastMessage.set(message);
-    this.toastType.set(type);
-    this.showToast.set(true);
-    setTimeout(() => this.showToast.set(false), 4000);
   }
 }

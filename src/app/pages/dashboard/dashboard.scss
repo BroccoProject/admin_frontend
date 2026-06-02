@@ -161,20 +161,29 @@
 @media (max-width: 900px) {
   .dash-stats {
     grid-template-columns: 1fr;
-    flex: none; /* Let content determine height on smaller screens */
+    flex: none;
   }
   .stat-card {
     border-right: none;
     border-bottom: 1px solid #dee2e6;
     height: auto;
-    
+
     &:last-child {
       border-bottom: none;
     }
   }
 }
 
-@media (max-width: 600px) {
-  .dash-root { padding: 20px 16px; gap: 16px; }
+@media (max-width: 768px) {
+  :host { padding: 12px 0 0 0; }
+  .dash-root { padding: 0 16px 24px; gap: 14px; }
+  .greeting-name { font-size: 20px; }
+  .stat-card { padding: 20px; }
+  .stat-label { margin-top: 12px; }
+}
+
+@media (max-width: 480px) {
+  .dash-root { padding: 0 12px 20px; }
   .greeting-name { font-size: 18px; }
+  .stat-icon { width: 48px; height: 48px; }
 }

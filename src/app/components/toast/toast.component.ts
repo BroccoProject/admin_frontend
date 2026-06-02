@@ -38,6 +38,18 @@ import { ToastService } from '../../services/toast.service';
       cursor: pointer;
       margin-left: 1rem;
     }
+    @media (max-width: 480px) {
+      .toast-container {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+      }
+      .toast {
+        min-width: 0;
+        width: 100%;
+        padding: 0.75rem 1rem;
+      }
+    }
   `]
 })
 export class ToastComponent {

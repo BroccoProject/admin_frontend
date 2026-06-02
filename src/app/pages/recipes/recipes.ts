@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,9 +8,8 @@ import { Recipe, RecipeDeletePreview } from '../../models/recipe.model';
 import { DeleteModalComponent } from '../../components/delete-modal/delete-modal.component';
 import { ToastService } from '../../services/toast.service';
 import { HasRoleDirective } from '../../directives/has-role.directive';
-import { DisabledNoRoleDirective } from '../../directives/disabled-no-role.directive';
-
 import { RouterModule } from '@angular/router';
+import { RECIPE_CATEGORIES, RECIPE_DIFFICULTIES, RECIPE_TAGS } from '../../constants';
 
 @Component({
   selector: 'app-recipes',
@@ -21,6 +21,7 @@ export class RecipesPage implements OnInit {
   private readonly recipeService = inject(RecipeService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   recipes = signal<Recipe[]>([]);
   total = signal(0);
@@ -36,9 +37,9 @@ export class RecipesPage implements OnInit {
   showFiltersPanel = signal(false);
   loading = signal(false);
 
-  availableDifficulties = ['Beginner', 'Intermediate', 'Master Chef'];
-  availableCategories = ['Dessert', 'Beef', 'Pork', 'Chicken', 'Vegetarian', 'Seafood', 'Pasta', 'Breakfast'];
-  availableTags = ['Pudding', 'Tart', 'Baking', 'Fruity', 'Sweet', 'Savory', 'Quick', 'Healthy', 'Spicy'];
+  availableDifficulties = RECIPE_DIFFICULTIES.map(d => d.value);
+  availableCategories = [...RECIPE_CATEGORIES];
+  availableTags = [...RECIPE_TAGS].slice(0, 20);
 
   showDeleteModal = signal(false);
   recipeToDelete = signal<Recipe | null>(null);
@@ -189,17 +190,22 @@ export class RecipesPage implements OnInit {
     this.recipeToDelete.set(recipe);
     this.deletePreview.set(null);
     this.previewLoading.set(true);
+    this.previewError.set(false);
     this.showDeleteModal.set(true);
 
-    this.recipeService.getDeletePreview(recipe.id).subscribe({
-      next: (preview) => {
-        this.deletePreview.set(preview);
-        this.previewLoading.set(false);
-      },
-      error: () => {
-        this.previewLoading.set(false);
-      },
-    });
+    this.recipeService.getDeletePreview(recipe.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (preview) => {
+          this.deletePreview.set(preview);
+          this.previewLoading.set(false);
+        },
+        error: () => {
+          this.previewLoading.set(false);
+          this.previewError.set(true);
+          this.toastService.show('Failed to load delete preview', 'error');
+        },
+      });
   }
 
   cancelDelete(): void {

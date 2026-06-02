@@ -1,13 +1,9 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
-  ElementRef,
   ViewChild,
-  HostListener,
   inject,
   signal,
-  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,38 +13,24 @@ import { RecipeService } from '../../services/recipe.service';
 import { ToastService } from '../../services/toast.service';
 import { Recipe } from '../../models/recipe.model';
 import { CategoryCreatePayload, CategoryNodePayload } from '../../models/category.model';
-
-interface GraphNode {
-  id: string; // internal UUID for graph tracking
-  recipe_id: string | null;
-  title: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  selected?: boolean;
-}
-
-interface GraphEdge {
-  fromNodeId: string;
-  toNodeId: string;
-}
+import { CATEGORY_AREAS, CATEGORY_TYPES } from '../../constants';
+import { GraphNode, GraphEdge } from '../../models/graph.model';
+import { GraphCanvasComponent } from '../../components/graph-canvas/graph-canvas.component';
 
 @Component({
   selector: 'app-category-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GraphCanvasComponent],
   templateUrl: './category-create.html',
   styleUrl: './category-create.scss',
 })
-export class CategoryCreatePage implements OnInit, OnDestroy {
+export class CategoryCreatePage implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly recipeService = inject(RecipeService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
-  private readonly ngZone = inject(NgZone);
 
-  @ViewChild('graphCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild(GraphCanvasComponent) graphCanvas!: GraphCanvasComponent;
 
   // Form State
   formData = signal<{
@@ -63,15 +45,8 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
     category_type: '',
   });
 
-  readonly availableAreas = [
-    'Algerian', 'American', 'Argentinian', 'Australian', 'British', 'Canadian',
-    'Chinese', 'Croatian', 'Dutch', 'Egyptian', 'Filipino', 'French', 'Greek',
-    'Indian', 'Irish', 'Italian', 'Jamaican', 'Japanese', 'Kenyan', 'Malaysian',
-    'Mexican', 'Moroccan', 'Norwegian', 'Polish', 'Portuguese', 'Russian',
-    'Saudi Arabian', 'Spanish', 'Syrian', 'Thai', 'Tunisian', 'Turkish',
-    'Ukrainian', 'Uruguayan', 'Venezulan', 'Vietnamese'
-  ];
-  readonly availableTypes = ['*', 'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pork', 'Seafood', 'Side', 'Vegetarian'];
+  readonly availableAreas = CATEGORY_AREAS;
+  readonly availableTypes = CATEGORY_TYPES;
 
   // Recipes State (Left Panel)
   recipes = signal<Recipe[]>([]);
@@ -83,29 +58,8 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
   isSubmitting = signal(false);
 
   // Graph State
-  private ctx!: CanvasRenderingContext2D;
-  private animationFrameId?: number;
-  nodes: GraphNode[] = [];
-  edges: GraphEdge[] = [];
-
-  // Canvas Interactions
-  private panX = 0;
-  private panY = 0;
-  private isPanning = false;
-  private panStartX = 0;
-  private panStartY = 0;
-
-  private draggingNode: GraphNode | null = null;
-  private dragStartX = 0;
-  private dragStartY = 0;
-
-  private connectingFromNode: GraphNode | null = null;
-  private mouseX = 0;
-  private mouseY = 0;
-
-  private readonly PORT_RADIUS = 6;
-  private readonly NODE_WIDTH = 140;
-  private readonly NODE_HEIGHT = 60;
+  nodes = signal<GraphNode[]>([]);
+  edges = signal<GraphEdge[]>([]);
 
   // Grid Spacing for database map_column/map_row conversion
   private readonly GRID_CELL_WIDTH = 200;
@@ -115,13 +69,6 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadRecipes();
-    this.initCanvas();
-  }
-
-  ngOnDestroy(): void {
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
   }
 
   // --- Recipe List Loading ---
@@ -183,7 +130,7 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
   }
 
   openRecipeDetail(recipeId: string): void {
-    window.open(`/recipes/${recipeId}`, '_blank');
+    window.open(`/#/recipes/${recipeId}`, '_blank');
   }
 
   // --- Drag and Drop from List to Canvas ---
@@ -198,326 +145,10 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
     }
   }
 
-  onCanvasDragOver(event: DragEvent): void {
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'copy';
+  addRecipeToCanvas(recipe: Recipe): void {
+    if (this.graphCanvas) {
+      this.graphCanvas.addRecipeNode(recipe);
     }
-  }
-
-  onCanvasDrop(event: DragEvent): void {
-    event.preventDefault();
-    const dataStr = event.dataTransfer?.getData('application/json');
-    if (!dataStr) return;
-
-    try {
-      const data = JSON.parse(dataStr);
-      const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-      const x = event.clientX - rect.left - this.panX;
-      const y = event.clientY - rect.top - this.panY;
-
-      this.addNode(data.id, data.title, x - this.NODE_WIDTH / 2, y - this.NODE_HEIGHT / 2);
-    } catch (e) {
-      console.error('Failed to parse dropped recipe', e);
-    }
-  }
-
-  // --- Canvas & Graph Logic ---
-
-  private initCanvas(): void {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx = canvas.getContext('2d')!;
-    this.resizeCanvas();
-    
-    // Start render loop
-    this.ngZone.runOutsideAngular(() => {
-      const render = () => {
-        this.drawGraph();
-        this.animationFrameId = requestAnimationFrame(render);
-      };
-      render();
-    });
-  }
-
-  @HostListener('window:resize')
-  resizeCanvas(): void {
-    const canvas = this.canvasRef.nativeElement;
-    const parent = canvas.parentElement;
-    if (parent) {
-      canvas.width = parent.clientWidth;
-      canvas.height = parent.clientHeight;
-    }
-  }
-
-  private addNode(recipe_id: string | null, title: string, x: number, y: number): void {
-    const id = crypto.randomUUID();
-    this.nodes.push({ id, recipe_id, title, x, y, width: this.NODE_WIDTH, height: this.NODE_HEIGHT });
-  }
-
-  private getPortPositions(node: GraphNode): { in: {x: number, y: number}, out: {x: number, y: number} } {
-    return {
-      in: { x: node.x, y: node.y + node.height / 2 },
-      out: { x: node.x + node.width, y: node.y + node.height / 2 }
-    };
-  }
-
-  private distance(x1: number, y1: number, x2: number, y2: number): number {
-    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  }
-
-  // Mouse Handlers
-  onCanvasMouseDown(event: MouseEvent): void {
-    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-    const worldX = mouseX - this.panX;
-    const worldY = mouseY - this.panY;
-
-    // 1. Check middle mouse for panning
-    if (event.button === 1 || (event.button === 0 && event.shiftKey)) {
-      this.isPanning = true;
-      this.panStartX = event.clientX - this.panX;
-      this.panStartY = event.clientY - this.panY;
-      return;
-    }
-
-    if (event.button !== 0) return; // Only left click for interaction
-
-    // Deselect all
-    this.nodes.forEach(n => n.selected = false);
-
-    // 2. Check ports for connection starting
-    for (let i = this.nodes.length - 1; i >= 0; i--) {
-      const node = this.nodes[i];
-      const ports = this.getPortPositions(node);
-      
-      // Clicked output port?
-      if (this.distance(worldX, worldY, ports.out.x, ports.out.y) < this.PORT_RADIUS * 2) {
-        this.connectingFromNode = node;
-        return;
-      }
-    }
-
-    // 3. Check node dragging
-    for (let i = this.nodes.length - 1; i >= 0; i--) {
-      const node = this.nodes[i];
-      if (worldX >= node.x && worldX <= node.x + node.width &&
-          worldY >= node.y && worldY <= node.y + node.height) {
-        this.draggingNode = node;
-        node.selected = true;
-        this.dragStartX = worldX - node.x;
-        this.dragStartY = worldY - node.y;
-        
-        // Bring to front
-        this.nodes.splice(i, 1);
-        this.nodes.push(node);
-        return;
-      }
-    }
-
-    // If nothing clicked, start panning
-    this.isPanning = true;
-    this.panStartX = event.clientX - this.panX;
-    this.panStartY = event.clientY - this.panY;
-  }
-
-  onCanvasMouseMove(event: MouseEvent): void {
-    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    this.mouseX = event.clientX - rect.left;
-    this.mouseY = event.clientY - rect.top;
-
-    if (this.isPanning) {
-      this.panX = event.clientX - this.panStartX;
-      this.panY = event.clientY - this.panStartY;
-    } else if (this.draggingNode) {
-      const worldX = this.mouseX - this.panX;
-      const worldY = this.mouseY - this.panY;
-      this.draggingNode.x = worldX - this.dragStartX;
-      this.draggingNode.y = worldY - this.dragStartY;
-    }
-  }
-
-  @HostListener('window:mouseup', ['$event'])
-  onCanvasMouseUp(event: MouseEvent): void {
-    this.isPanning = false;
-    this.draggingNode = null;
-
-    if (this.connectingFromNode && this.canvasRef) {
-      const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-      const worldX = event.clientX - rect.left - this.panX;
-      const worldY = event.clientY - rect.top - this.panY;
-
-      // Check if dropped on an input port
-      for (const node of this.nodes) {
-        if (node.id === this.connectingFromNode.id) continue;
-        const ports = this.getPortPositions(node);
-        if (this.distance(worldX, worldY, ports.in.x, ports.in.y) < this.PORT_RADIUS * 3) {
-          // Check if edge already exists
-          const exists = this.edges.find(e => 
-            e.fromNodeId === this.connectingFromNode!.id && 
-            e.toNodeId === node.id
-          );
-          if (!exists) {
-            this.edges.push({
-              fromNodeId: this.connectingFromNode.id,
-              toNodeId: node.id
-            });
-          }
-          break;
-        }
-      }
-      this.connectingFromNode = null;
-    }
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      const selectedNodeIndex = this.nodes.findIndex(n => n.selected);
-      if (selectedNodeIndex !== -1) {
-        const nodeId = this.nodes[selectedNodeIndex].id;
-        // Remove edges connected to this node
-        this.edges = this.edges.filter(e => e.fromNodeId !== nodeId && e.toNodeId !== nodeId);
-        // Remove node
-        this.nodes.splice(selectedNodeIndex, 1);
-      }
-    }
-  }
-
-  private drawGraph(): void {
-    if (!this.ctx) return;
-    const canvas = this.canvasRef.nativeElement;
-    
-    // Clear canvas
-    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw grid
-    this.ctx.save();
-    this.ctx.translate(this.panX, this.panY);
-
-    // Draw background grid dots
-    const dotSpacing = 20;
-    const startX = Math.floor(-this.panX / dotSpacing) * dotSpacing;
-    const startY = Math.floor(-this.panY / dotSpacing) * dotSpacing;
-    const endX = startX + canvas.width + dotSpacing;
-    const endY = startY + canvas.height + dotSpacing;
-
-    this.ctx.fillStyle = '#e5e7eb';
-    for (let x = startX; x < endX; x += dotSpacing) {
-      for (let y = startY; y < endY; y += dotSpacing) {
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 1, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-    }
-
-    // Draw existing edges
-    this.ctx.strokeStyle = '#34d399'; // Emerald-400
-    this.ctx.lineWidth = 2;
-    for (const edge of this.edges) {
-      const fromNode = this.nodes.find(n => n.id === edge.fromNodeId);
-      const toNode = this.nodes.find(n => n.id === edge.toNodeId);
-      if (fromNode && toNode) {
-        const p1 = this.getPortPositions(fromNode).out;
-        const p2 = this.getPortPositions(toNode).in;
-        this.drawBezierCurve(p1.x, p1.y, p2.x, p2.y);
-      }
-    }
-
-    // Draw connecting line in progress
-    if (this.connectingFromNode) {
-      const p1 = this.getPortPositions(this.connectingFromNode).out;
-      const worldMouseX = this.mouseX - this.panX;
-      const worldMouseY = this.mouseY - this.panY;
-      this.ctx.strokeStyle = '#a7f3d0'; // Emerald-200
-      this.ctx.lineWidth = 2;
-      this.drawBezierCurve(p1.x, p1.y, worldMouseX, worldMouseY);
-    }
-
-    // Draw nodes
-    for (const node of this.nodes) {
-      this.drawNode(node);
-    }
-
-    this.ctx.restore();
-  }
-
-  private drawBezierCurve(x1: number, y1: number, x2: number, y2: number): void {
-    const cpOffset = Math.abs(x2 - x1) * 0.5 + 20;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x1, y1);
-    this.ctx.bezierCurveTo(
-      x1 + cpOffset, y1,
-      x2 - cpOffset, y2,
-      x2, y2
-    );
-    this.ctx.stroke();
-  }
-
-  private drawNode(node: GraphNode): void {
-    // Node shadow
-    this.ctx.shadowColor = 'rgba(0,0,0,0.05)';
-    this.ctx.shadowBlur = 10;
-    this.ctx.shadowOffsetY = 4;
-
-    // Node background
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.beginPath();
-    this.ctx.roundRect(node.x, node.y, node.width, node.height, 8);
-    this.ctx.fill();
-
-    // Node border
-    this.ctx.shadowColor = 'transparent';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = node.selected ? '#ff6d00' : '#e5e7eb';
-    if (node.selected) this.ctx.lineWidth = 2;
-    this.ctx.stroke();
-
-    // Text
-    this.ctx.fillStyle = '#374151';
-    this.ctx.font = '500 13px Inter, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    
-    // Simple text wrapping (up to 2 lines)
-    const words = node.title.split(' ');
-    let line1 = '';
-    let line2 = '';
-    let i = 0;
-    for (; i < words.length; i++) {
-      if (this.ctx.measureText(line1 + words[i] + ' ').width < node.width - 20) {
-        line1 += words[i] + ' ';
-      } else {
-        break;
-      }
-    }
-    for (; i < words.length; i++) {
-      if (this.ctx.measureText(line2 + words[i] + ' ').width < node.width - 20) {
-        line2 += words[i] + ' ';
-      } else {
-        line2 += '...';
-        break;
-      }
-    }
-
-    if (line2) {
-      this.ctx.fillText(line1.trim(), node.x + node.width / 2, node.y + node.height / 2 - 8);
-      this.ctx.fillText(line2.trim(), node.x + node.width / 2, node.y + node.height / 2 + 8);
-    } else {
-      this.ctx.fillText(line1.trim(), node.x + node.width / 2, node.y + node.height / 2);
-    }
-
-    // Draw ports
-    const ports = this.getPortPositions(node);
-    
-    this.ctx.fillStyle = '#10b981'; // Emerald-500
-    this.ctx.beginPath();
-    this.ctx.arc(ports.in.x, ports.in.y, this.PORT_RADIUS, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    this.ctx.beginPath();
-    this.ctx.arc(ports.out.x, ports.out.y, this.PORT_RADIUS, 0, Math.PI * 2);
-    this.ctx.fill();
   }
 
   // --- Save Logic ---
@@ -554,28 +185,37 @@ export class CategoryCreatePage implements OnInit, OnDestroy {
   }
 
   private serializeGraph(): CategoryNodePayload[] {
-    // Backend expects an array of nodes, where prereqs are indices of other nodes in the array.
-    // 1. Map internal IDs to array indices
-    const idToIndex = new Map<string, number>();
-    this.nodes.forEach((n, idx) => idToIndex.set(n.id, idx));
+    const result: CategoryNodePayload[] = [];
+    const currentNodes = this.nodes();
+    const currentEdges = this.edges();
 
-    // 2. Build payload
-    return this.nodes.map(n => {
-      // Find all incoming edges to this node
-      const incomingEdges = this.edges.filter(e => e.toNodeId === n.id);
-      const prereqIndices = incomingEdges.map(e => idToIndex.get(e.fromNodeId)!);
+    for (const node of currentNodes) {
+      // Find dependencies (edges pointing TO this node)
+      const depEdges = currentEdges.filter(e => e.toNodeId === node.id);
+      
+      // We map source nodes to their eventual index in the result array.
+      // But result array doesn't exist yet! We must order nodes topologically, 
+      // or simply rely on backend resolving by prereq IDs if we had them.
+      // Since payload expects `prerequisite_indices`, we must compute an order.
 
-      const gridX = Math.max(0, Math.round((n.x - this.GRID_OFFSET_X) / this.GRID_CELL_WIDTH));
-      const gridY = Math.max(0, Math.round((n.y - this.GRID_OFFSET_Y) / this.GRID_CELL_HEIGHT));
+      // For simplicity, just use current array order (assuming no complex topological sort needed for indices)
+      const prereqIndices = depEdges.map(e => 
+        currentNodes.findIndex(n => n.id === e.fromNodeId)
+      ).filter(idx => idx !== -1);
 
-      return {
-        recipe_id: n.recipe_id,
-        title: n.title,
-        x: gridX,
-        y: gridY,
+      // Math.floor to convert pixel coords to map grid coords
+      const col = Math.floor((node.x - this.GRID_OFFSET_X) / this.GRID_CELL_WIDTH);
+      const row = Math.floor((node.y - this.GRID_OFFSET_Y) / this.GRID_CELL_HEIGHT);
+
+      result.push({
+        recipe_id: node.recipe_id,
+        title: node.title,
+        x: col,
+        y: row,
         prerequisite_indices: prereqIndices
-      };
-    });
+      });
+    }
+    return result;
   }
 
   cancel(): void {
