@@ -1,0 +1,19 @@
+<canvas 
+  #graphCanvas 
+  class="graph-canvas"
+  (mousedown)="onCanvasMouseDown($event)"
+  (mousemove)="onCanvasMouseMove($event)"
+  (mouseup)="onCanvasMouseUp($event)"
+  (touchstart)="onCanvasTouchStart($event)"
+  (touchmove)="onCanvasTouchMove($event)"
+  (touchend)="onCanvasTouchEnd($event)"
+  (dragover)="onCanvasDragOver($event)"
+  (drop)="onCanvasDrop($event)"
+  tabindex="0"
+></canvas>
+<div class="canvas-instructions">
+  Drag recipes from the left panel onto the canvas.<br>
+  Click and drag between green ports to connect nodes.<br>
+  Select a node and press Delete to remove it.<br>
+  Middle-click or Shift+Click to pan the canvas.
+</div>

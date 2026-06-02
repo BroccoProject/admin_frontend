@@ -349,28 +349,8 @@
   border-top-color: #ff6d00;
 }
 
-.spinner-large {
-  width: 32px;
-  height: 32px;
-  border-width: 3px;
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-// ── Fullscreen Loading ──
-.loading-overlay-full {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  height: 100%;
-  background: #f9fafb;
-  color: #4b5563;
-  font-size: 15px;
-  font-weight: 500;
 }
 
 // ── Responsive ──
@@ -404,6 +384,7 @@
     font-size: 16px;
   }
 
+  // Canvas editor: stack vertically on mobile
   .workspace {
     flex-direction: column;
     height: auto;
@@ -413,7 +394,7 @@
   .panel-left {
     width: 100%;
     height: auto;
-    max-height: 35vh;
+    max-height: 35vh; // Limit recipes list height
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
     flex-shrink: 0;

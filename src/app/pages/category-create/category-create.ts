@@ -7,8 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
 import { CategoryService } from '../../services/category.service';
 import { RecipeService } from '../../services/recipe.service';
 import { ToastService } from '../../services/toast.service';
@@ -19,14 +18,13 @@ import { GraphNode, GraphEdge } from '../../models/graph.model';
 import { GraphCanvasComponent } from '../../components/graph-canvas/graph-canvas.component';
 
 @Component({
-  selector: 'app-category-edit',
+  selector: 'app-category-create',
   standalone: true,
   imports: [CommonModule, FormsModule, GraphCanvasComponent],
-  templateUrl: './category-edit.html',
-  styleUrl: './category-edit.scss',
+  templateUrl: './category-create.html',
+  styleUrl: './category-create.scss',
 })
-export class CategoryEditPage implements OnInit {
-  private readonly route = inject(ActivatedRoute);
+export class CategoryCreatePage implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly recipeService = inject(RecipeService);
   private readonly toastService = inject(ToastService);
@@ -35,10 +33,6 @@ export class CategoryEditPage implements OnInit {
   @ViewChild(GraphCanvasComponent) graphCanvas!: GraphCanvasComponent;
 
   // Form State
-  id = signal<string>('');
-  loading = signal(true);
-  isSubmitting = signal(false);
-
   formData = signal<{
     title: string;
     unlock_cost_stars: number;
@@ -61,6 +55,7 @@ export class CategoryEditPage implements OnInit {
   pageSize = signal(20);
   totalPages = signal(1);
   loadingRecipes = signal(false);
+  isSubmitting = signal(false);
 
   // Graph State
   nodes = signal<GraphNode[]>([]);
@@ -73,74 +68,7 @@ export class CategoryEditPage implements OnInit {
   private readonly GRID_OFFSET_Y = 100;
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.id.set(id);
-      this.loadAllData(id);
-    } else {
-      this.toastService.show('Category ID not found', 'error');
-      this.router.navigate(['/categories']);
-    }
-  }
-
-  // --- Load All Data ---
-
-  loadAllData(id: string): void {
-    this.loading.set(true);
-    forkJoin({
-      category: this.categoryService.getCategory(id),
-      nodes: this.categoryService.getCategoryNodes(id),
-      recipes: this.recipeService.getRecipes({
-        page: this.page(),
-        page_size: this.pageSize(),
-      })
-    }).subscribe({
-      next: (res) => {
-        // 1. Populate category settings
-        this.formData.set({
-          title: res.category.title || '',
-          unlock_cost_stars: res.category.unlock_cost_stars ?? 0,
-          category_area: res.category.category_area || '',
-          category_type: res.category.category_type || '',
-        });
-
-        // 2. Populate recipes browser
-        this.recipes.set(res.recipes.items);
-        this.totalPages.set(res.recipes.total_pages);
-
-        const loadedNodes = res.nodes.map(node => {
-          const canvasX = node.x < 50 ? (node.x * this.GRID_CELL_WIDTH + this.GRID_OFFSET_X) : node.x;
-          const canvasY = node.y < 50 ? (node.y * this.GRID_CELL_HEIGHT + this.GRID_OFFSET_Y) : node.y;
-          return {
-            id: node.id,
-            recipe_id: node.recipe_id,
-            title: node.title,
-            x: canvasX,
-            y: canvasY,
-            width: 140,
-            height: 60,
-          };
-        });
-        this.nodes.set(loadedNodes);
-
-        const loadedEdges: GraphEdge[] = [];
-        res.nodes.forEach(node => {
-          (node.prerequisite_ids || []).forEach(prereqId => {
-            loadedEdges.push({
-              fromNodeId: prereqId,
-              toNodeId: node.id
-            });
-          });
-        });
-        this.edges.set(loadedEdges);
-
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.toastService.show('Failed to load category details', 'error');
-        this.router.navigate(['/categories']);
-      }
-    });
+    this.loadRecipes();
   }
 
   // --- Recipe List Loading ---
@@ -244,14 +172,14 @@ export class CategoryEditPage implements OnInit {
       nodes: this.serializeGraph()
     };
 
-    this.categoryService.updateCategory(this.id(), payload).subscribe({
+    this.categoryService.createCategory(payload).subscribe({
       next: () => {
-        this.toastService.show('Category updated successfully', 'success');
+        this.toastService.show('Category created successfully', 'success');
         this.router.navigate(['/categories']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.toastService.show(err?.error?.detail || 'Failed to update category', 'error');
+        this.toastService.show(err?.error?.detail || 'Failed to create category', 'error');
       }
     });
   }
@@ -265,6 +193,12 @@ export class CategoryEditPage implements OnInit {
       // Find dependencies (edges pointing TO this node)
       const depEdges = currentEdges.filter(e => e.toNodeId === node.id);
       
+      // We map source nodes to their eventual index in the result array.
+      // But result array doesn't exist yet! We must order nodes topologically, 
+      // or simply rely on backend resolving by prereq IDs if we had them.
+      // Since payload expects `prerequisite_indices`, we must compute an order.
+
+      // For simplicity, just use current array order (assuming no complex topological sort needed for indices)
       const prereqIndices = depEdges.map(e => 
         currentNodes.findIndex(n => n.id === e.fromNodeId)
       ).filter(idx => idx !== -1);

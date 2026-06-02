@@ -18,6 +18,7 @@ import { CommonModule, KeyValuePipe } from '@angular/common';
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      padding: 1rem;
     }
     .modal-content {
       background: white;
@@ -26,6 +27,8 @@ import { CommonModule, KeyValuePipe } from '@angular/common';
       max-width: 500px;
       width: 100%;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .modal-actions {
       display: flex;
@@ -74,6 +77,18 @@ import { CommonModule, KeyValuePipe } from '@angular/common';
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+    @media (max-width: 480px) {
+      .modal-content {
+        padding: 1.25rem;
+      }
+      .modal-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .btn {
+        width: 100%;
+      }
     }
   `]
 })

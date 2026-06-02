@@ -22,3 +22,30 @@ export interface CategoryDeletePreview {
   roadmap_nodes: number;
   completed_node_records: number;
 }
+
+export interface CategoryNodePayload {
+  recipe_id: string | null;
+  title: string;
+  x: number;
+  y: number;
+  prerequisite_indices: number[];
+}
+
+export interface CategoryCreatePayload {
+  title: string;
+  subtitle: string | null;
+  image_url: string | null;
+  unlock_cost_stars: number | null;
+  category_area: string | null;
+  category_type: string | null;
+  nodes?: CategoryNodePayload[];
+}
+
+export interface CategoryNodeResponse {
+  id: string;
+  recipe_id: string | null;
+  title: string;
+  x: number;
+  y: number;
+  prerequisite_ids: string[];
+}

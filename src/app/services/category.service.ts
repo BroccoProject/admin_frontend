@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Category, CategoryListResponse, CategoryDeletePreview } from '../models/category.model';
+import { Category, CategoryListResponse, CategoryDeletePreview, CategoryCreatePayload, CategoryNodeResponse } from '../models/category.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -15,6 +15,8 @@ export class CategoryService {
     search?: string;
     sort_by?: string;
     sort_order?: string;
+    category_area?: string;
+    category_type?: string;
   }): Observable<CategoryListResponse> {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
@@ -22,6 +24,8 @@ export class CategoryService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.sort_by) httpParams = httpParams.set('sort_by', params.sort_by);
     if (params.sort_order) httpParams = httpParams.set('sort_order', params.sort_order);
+    if (params.category_area) httpParams = httpParams.set('category_area', params.category_area);
+    if (params.category_type) httpParams = httpParams.set('category_type', params.category_type);
 
     return this.http.get<CategoryListResponse>(this.baseUrl, { params: httpParams });
   }
@@ -30,11 +34,15 @@ export class CategoryService {
     return this.http.get<Category>(`${this.baseUrl}/${id}`);
   }
 
-  getCategoryById(id: string): Observable<Category> {
-    return this.http.get<Category>(`${this.baseUrl}/${id}`);
+  getCategoryNodes(id: string): Observable<CategoryNodeResponse[]> {
+    return this.http.get<CategoryNodeResponse[]>(`${this.baseUrl}/${id}/nodes`);
   }
 
-  updateCategory(id: string, data: { title?: string; description?: string }): Observable<Category> {
+  createCategory(payload: CategoryCreatePayload): Observable<Category> {
+    return this.http.post<Category>(this.baseUrl, payload);
+  }
+
+  updateCategory(id: string, data: CategoryCreatePayload): Observable<Category> {
     return this.http.patch<Category>(`${this.baseUrl}/${id}`, data);
   }
 

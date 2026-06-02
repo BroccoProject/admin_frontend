@@ -11,37 +11,50 @@ import { CommonModule } from '@angular/common';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 2rem;
-      padding-top: 1rem;
+      padding: 1rem 2.5rem;
+      background-color: #ffffff;
       border-top: 1px solid #dee2e6;
+      width: 100%;
     }
     .pagination-info {
       color: #6c757d;
+      font-size: 13px;
     }
     .pagination-controls {
       display: flex;
       gap: 0.25rem;
     }
     .btn-page {
-      padding: 0.375rem 0.75rem;
+      padding: 0.5rem 0.85rem;
       border: 1px solid #dee2e6;
       background-color: white;
-      color: #007bff;
+      color: #495057;
       cursor: pointer;
       border-radius: 4px;
+      font-size: 13px;
+      transition: all 0.15s ease;
     }
     .btn-page:hover:not(:disabled) {
-      background-color: #e9ecef;
+      background-color: #f8f9fa;
+      border-color: #ced4da;
     }
     .btn-page.active {
-      background-color: #007bff;
+      background-color: #00b050;
       color: white;
-      border-color: #007bff;
+      border-color: #00b050;
+      font-weight: 500;
     }
     .btn-page:disabled {
-      color: #6c757d;
+      color: #adb5bd;
       cursor: not-allowed;
       background-color: #f8f9fa;
+    }
+    @media (max-width: 600px) {
+      .pagination-container {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
     }
   `]
 })

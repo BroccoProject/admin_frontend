@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthUser } from '../models/auth.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
   readonly isViewer = computed(() => this.user()?.role === 'viewer');
   readonly loading = this._loading.asReadonly();
 
-  private readonly apiUrl = 'http://localhost:8000/api/v1';
+  private readonly apiUrl = environment.apiUrl;
 
   async loadUser(): Promise<AuthUser | null> {
     this._loading.set(true);
@@ -40,7 +41,30 @@ export class AuthService {
   }
 
   login(): void {
+    this.loginWithGoogle();
+  }
+
+  loginWithGoogle(): void {
     window.location.href = `${this.apiUrl}/auth/google`;
+  }
+
+  loginWithGithub(): void {
+    window.location.href = `${this.apiUrl}/auth/github`;
+  }
+
+  async loginWithCredentials(email: string, password: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${this.apiUrl}/auth/login`, { email, password }, { withCredentials: true })
+    );
+    await this.loadUser();
+    this.router.navigate(['/dashboard']);
+  }
+
+  async register(email: string, password: string): Promise<string> {
+    const response = await firstValueFrom(
+      this.http.post<{ detail: string }>(`${this.apiUrl}/auth/register`, { email, password })
+    );
+    return response.detail;
   }
 
   async logout(): Promise<void> {
