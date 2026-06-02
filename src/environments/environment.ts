@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://18.185.83.244.nip.io:8000/api/v1',
+  apiUrl: 'https://18.185.83.244.nip.io/api/v1',
 };
