@@ -8,9 +8,9 @@
 .graph-canvas {
   width: 100%;
   height: 100%;
-  outline: none; // remove focus ring
+  outline: none;
   cursor: default;
-  touch-action: none; // Prevent native scrolling when touching the canvas
+  touch-action: none;
 }
 
 .canvas-instructions {
@@ -24,6 +24,6 @@
   font-size: 12px;
   color: #4b5563;
   line-height: 1.5;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   pointer-events: none;
 }

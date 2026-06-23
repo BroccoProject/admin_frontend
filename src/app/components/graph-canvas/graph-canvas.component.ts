@@ -33,7 +33,6 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
   private ctx!: CanvasRenderingContext2D;
   private animationFrameId?: number;
 
-  // Canvas Interactions
   private panX = 0;
   private panY = 0;
   private isPanning = false;
@@ -41,6 +40,7 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
   private panStartY = 0;
 
   private draggingNode: GraphNode | null = null;
+  private previewDropNode: { x: number, y: number } | null = null;
   private dragStartX = 0;
   private dragStartY = 0;
 
@@ -66,8 +66,7 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
     this.resizeCanvas();
-    
-    // Start render loop
+
     this.ngZone.runOutsideAngular(() => {
       const render = () => {
         this.drawGraph();
@@ -92,22 +91,49 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     const centerX = (canvas.width / 2) - this.panX - (this.NODE_WIDTH / 2);
     const centerY = (canvas.height / 2) - this.panY - (this.NODE_HEIGHT / 2);
     const offset = (Math.random() - 0.5) * 40;
-    
+
     this.addNode(recipe.id, recipe.title, centerX + offset, centerY + offset);
-    
+
     if (window.innerWidth <= 768) {
       canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  private addNode(recipe_id: string | null, title: string, x: number, y: number): void {
+  private getFreeGridSpot(startCol: number, startRow: number, ignoreNodeId?: string): { col: number, row: number } {
+    let radius = 0;
+    const currentNodes = this.nodes();
+    while (true) {
+      for (let c = startCol - radius; c <= startCol + radius; c++) {
+        for (let r = startRow - radius; r <= startRow + radius; r++) {
+          if (c < 0 || r < 0) continue;
+          if (radius === 0 || c === startCol - radius || c === startCol + radius || r === startRow - radius || r === startRow + radius) {
+            const targetX = c * 200 + 100;
+            const targetY = r * 150 + 100;
+            const occupied = currentNodes.some(n => Math.abs(n.x - targetX) < 1 && Math.abs(n.y - targetY) < 1 && n.id !== ignoreNodeId);
+            if (!occupied) {
+              return { col: c, row: r };
+            }
+          }
+        }
+      }
+      radius++;
+    }
+  }
+
+  private addNode(recipe_id: string | null, title: string, rawX: number, rawY: number): void {
+    const targetCol = Math.max(0, Math.round((rawX - 100) / 200));
+    const targetRow = Math.max(0, Math.round((rawY - 100) / 150));
+    const { col, row } = this.getFreeGridSpot(targetCol, targetRow);
+    const x = col * 200 + 100;
+    const y = row * 150 + 100;
+
     const id = crypto.randomUUID();
     const newNodes = [...this.nodes(), { id, recipe_id, title, x, y, width: this.NODE_WIDTH, height: this.NODE_HEIGHT }];
     this.nodes.set(newNodes);
     this.changed.emit();
   }
 
-  private getPortPositions(node: GraphNode): { in: {x: number, y: number}, out: {x: number, y: number} } {
+  private getPortPositions(node: GraphNode): { in: { x: number, y: number }, out: { x: number, y: number } } {
     return {
       in: { x: node.x, y: node.y + node.height / 2 },
       out: { x: node.x + node.width, y: node.y + node.height / 2 }
@@ -118,17 +144,50 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
   }
 
-  // --- Mouse & Touch Handlers ---
-  
+  private hasPath(startId: string, targetId: string, edges: GraphEdge[]): boolean {
+    if (startId === targetId) return true;
+    
+    const visited = new Set<string>();
+    const queue = [startId];
+    
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      if (currentId === targetId) return true;
+      
+      if (!visited.has(currentId)) {
+        visited.add(currentId);
+        
+        // Find all nodes we can reach from the current node
+        const neighbors = edges
+          .filter(e => e.fromNodeId === currentId)
+          .map(e => e.toNodeId);
+          
+        queue.push(...neighbors);
+      }
+    }
+    
+    return false;
+  }
+
   onCanvasDragOver(event: DragEvent): void {
     event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
     }
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    const x = event.clientX - rect.left - this.panX;
+    const y = event.clientY - rect.top - this.panY;
+    
+    this.previewDropNode = { x: x - this.NODE_WIDTH / 2, y: y - this.NODE_HEIGHT / 2 };
+  }
+
+  onCanvasDragLeave(event: DragEvent): void {
+    this.previewDropNode = null;
   }
 
   onCanvasDrop(event: DragEvent): void {
     event.preventDefault();
+    this.previewDropNode = null;
     const dataStr = event.dataTransfer?.getData('application/json');
     if (!dataStr) return;
 
@@ -176,12 +235,12 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     for (let i = currentNodes.length - 1; i >= 0; i--) {
       const node = currentNodes[i];
       if (worldX >= node.x && worldX <= node.x + node.width &&
-          worldY >= node.y && worldY <= node.y + node.height) {
+        worldY >= node.y && worldY <= node.y + node.height) {
         this.draggingNode = node;
         node.selected = true;
         this.dragStartX = worldX - node.x;
         this.dragStartY = worldY - node.y;
-        
+
         currentNodes.splice(i, 1);
         currentNodes.push(node);
         this.nodes.set(currentNodes);
@@ -206,16 +265,27 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     } else if (this.draggingNode) {
       const worldX = this.mouseX - this.panX;
       const worldY = this.mouseY - this.panY;
-      this.draggingNode.x = worldX - this.dragStartX;
-      this.draggingNode.y = worldY - this.dragStartY;
+      
+      const rawX = worldX - this.dragStartX;
+      const rawY = worldY - this.dragStartY;
+      
+      this.draggingNode.x = rawX;
+      this.draggingNode.y = rawY;
     }
   }
 
   @HostListener('window:mouseup', ['$event'])
   onCanvasMouseUp(event: MouseEvent): void {
     this.isPanning = false;
-    
+
     if (this.draggingNode) {
+      const targetCol = Math.max(0, Math.round((this.draggingNode.x - 100) / 200));
+      const targetRow = Math.max(0, Math.round((this.draggingNode.y - 100) / 150));
+      const { col, row } = this.getFreeGridSpot(targetCol, targetRow, this.draggingNode.id);
+      
+      this.draggingNode.x = col * 200 + 100;
+      this.draggingNode.y = row * 150 + 100;
+
       this.changed.emit();
     }
     this.draggingNode = null;
@@ -232,10 +302,17 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
         if (node.id === this.connectingFromNode.id) continue;
         const ports = this.getPortPositions(node);
         if (this.distance(worldX, worldY, ports.in.x, ports.in.y) < this.PORT_RADIUS * 3) {
-          const exists = currentEdges.find(e => 
+          const exists = currentEdges.find(e =>
             e.fromNodeId === this.connectingFromNode!.id && e.toNodeId === node.id
           );
+          
           if (!exists) {
+            // Cycle detection: check if there's already a path from 'node.id' to 'this.connectingFromNode.id'
+            if (this.hasPath(node.id, this.connectingFromNode.id, currentEdges)) {
+              console.warn('Cannot create loop in the graph.');
+              break;
+            }
+
             currentEdges.push({
               fromNodeId: this.connectingFromNode.id,
               toNodeId: node.id
@@ -292,13 +369,13 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
       const selectedNodeIndex = currentNodes.findIndex(n => n.selected);
       if (selectedNodeIndex !== -1) {
         const nodeId = currentNodes[selectedNodeIndex].id;
-        
+
         const newEdges = this.edges().filter(e => e.fromNodeId !== nodeId && e.toNodeId !== nodeId);
         this.edges.set(newEdges);
-        
+
         currentNodes.splice(selectedNodeIndex, 1);
         this.nodes.set(currentNodes);
-        
+
         this.changed.emit();
       }
     }
@@ -309,26 +386,40 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     const canvas = this.canvasRef.nativeElement;
     const currentNodes = this.nodes();
     const currentEdges = this.edges();
-    
+
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     this.ctx.save();
     this.ctx.translate(this.panX, this.panY);
 
-    const dotSpacing = 20;
-    const startX = Math.floor(-this.panX / dotSpacing) * dotSpacing;
-    const startY = Math.floor(-this.panY / dotSpacing) * dotSpacing;
-    const endX = startX + canvas.width + dotSpacing;
-    const endY = startY + canvas.height + dotSpacing;
+    const cellWidth = 200;
+    const cellHeight = 150;
+    const slotWidth = this.NODE_WIDTH + 20;
+    const slotHeight = this.NODE_HEIGHT + 20;
+    const slotOffsetX = 100 - 10;
+    const slotOffsetY = 100 - 10;
 
-    this.ctx.fillStyle = '#e5e7eb';
-    for (let x = startX; x < endX; x += dotSpacing) {
-      for (let y = startY; y < endY; y += dotSpacing) {
+    const startCol = Math.max(0, Math.floor(-this.panX / cellWidth) - 1);
+    const endCol = Math.max(0, Math.floor((-this.panX + canvas.width) / cellWidth) + 1);
+    const startRow = Math.max(0, Math.floor(-this.panY / cellHeight) - 1);
+    const endRow = Math.max(0, Math.floor((-this.panY + canvas.height) / cellHeight) + 1);
+
+    this.ctx.strokeStyle = '#e5e7eb';
+    this.ctx.fillStyle = '#f9fafb';
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([8, 4]);
+
+    for (let col = startCol; col <= endCol; col++) {
+      for (let row = startRow; row <= endRow; row++) {
+        const x = col * cellWidth + slotOffsetX;
+        const y = row * cellHeight + slotOffsetY;
         this.ctx.beginPath();
-        this.ctx.arc(x, y, 1, 0, Math.PI * 2);
+        this.ctx.roundRect(x, y, slotWidth, slotHeight, 12);
         this.ctx.fill();
+        this.ctx.stroke();
       }
     }
+    this.ctx.setLineDash([]);
 
     this.ctx.strokeStyle = '#34d399';
     this.ctx.lineWidth = 2;
@@ -349,6 +440,32 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
       this.ctx.strokeStyle = '#a7f3d0';
       this.ctx.lineWidth = 2;
       this.drawBezierCurve(p1.x, p1.y, worldMouseX, worldMouseY);
+    }
+
+    const previewNode = this.draggingNode || this.previewDropNode;
+    if (previewNode) {
+      const targetCol = Math.max(0, Math.round((previewNode.x - 100) / 200));
+      const targetRow = Math.max(0, Math.round((previewNode.y - 100) / 150));
+      const ignoreId = this.draggingNode ? this.draggingNode.id : undefined;
+      const { col, row } = this.getFreeGridSpot(targetCol, targetRow, ignoreId);
+      
+      const previewX = col * 200 + 100;
+      const previewY = row * 150 + 100;
+
+      this.ctx.globalAlpha = 0.5;
+      
+      this.ctx.fillStyle = '#f9fafb';
+      this.ctx.beginPath();
+      this.ctx.roundRect(previewX, previewY, this.NODE_WIDTH, this.NODE_HEIGHT, 8);
+      this.ctx.fill();
+
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = '#9ca3af';
+      this.ctx.setLineDash([6, 6]);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+      
+      this.ctx.globalAlpha = 1.0;
     }
 
     for (const node of currentNodes) {
@@ -390,7 +507,7 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     this.ctx.font = '500 13px Inter, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    
+
     const words = node.title.split(' ');
     let line1 = '';
     let line2 = '';
@@ -419,7 +536,7 @@ export class GraphCanvasComponent implements OnInit, OnDestroy {
     }
 
     const ports = this.getPortPositions(node);
-    
+
     this.ctx.fillStyle = '#10b981';
     this.ctx.beginPath();
     this.ctx.arc(ports.in.x, ports.in.y, this.PORT_RADIUS, 0, Math.PI * 2);

@@ -203,9 +203,9 @@ export class CategoryCreatePage implements OnInit {
         currentNodes.findIndex(n => n.id === e.fromNodeId)
       ).filter(idx => idx !== -1);
 
-      // Math.floor to convert pixel coords to map grid coords
-      const col = Math.floor((node.x - this.GRID_OFFSET_X) / this.GRID_CELL_WIDTH);
-      const row = Math.floor((node.y - this.GRID_OFFSET_Y) / this.GRID_CELL_HEIGHT);
+      // Math.round to convert pixel coords to map grid coords
+      const col = Math.round((node.x - this.GRID_OFFSET_X) / this.GRID_CELL_WIDTH);
+      const row = Math.round((node.y - this.GRID_OFFSET_Y) / this.GRID_CELL_HEIGHT);
 
       result.push({
         recipe_id: node.recipe_id,
