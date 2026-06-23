@@ -1,0 +1,12 @@
+services:
+  frontend:
+    image: node:22-alpine
+    container_name: admin_panel_frontend_dev
+    restart: always
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+    command: sh -c "npm install && npm start -- --host 0.0.0.0 --poll 2000"
