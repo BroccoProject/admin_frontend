@@ -3,6 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-auth-pending',
@@ -26,7 +27,7 @@ export class AuthPendingPage {
     this.isRequesting = true;
     try {
       await firstValueFrom(
-        this.http.post('http://localhost:8000/api/v1/access-requests', {
+        this.http.post(`${environment.apiUrl}/access-requests`, {
           email: user.email,
           message: 'Please grant me access to the admin panel.'
         }, { withCredentials: true })
